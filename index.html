@@ -119,11 +119,43 @@ h1{font-family:var(--serif);font-weight:400;font-size:34px;letter-spacing:-.01em
 .tg{width:44px;height:26px;border-radius:13px;background:var(--raise);border:1px solid var(--line);position:relative;transition:background .2s}
 .tg::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
 .tg.on{background:var(--accent)}.tg.on::after{transform:translateX(18px);background:var(--accent-ink)}
+
+.sec{font:400 22px var(--serif);margin:28px 0 6px}
+.mini{display:flex;gap:8px;margin-top:10px}
+.mini button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--raise);color:var(--text);font:500 13px var(--sans);cursor:pointer}
+.mini button.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bad{color:#C98A8A}
+.row2{display:flex;gap:10px;align-items:center}.row2 .field{margin-top:0;flex:1}.row2 .ghost{width:auto;margin-top:0;padding:15px 18px}
+.lbl{font-size:13px;color:var(--muted);margin:16px 0 0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.chip{background:var(--raise);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:9px 14px;font:500 14px var(--sans);cursor:pointer}
+.chip.on{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
 
-<main class="view on" id="v-swap">
+<main class="view on" id="v-buy">
+<header><h1>Покупка</h1><div class="status"><i></i><span id="bupd">Курс загружается</span></div></header>
+<section class="card">
+  <div class="label">Вы платите</div>
+  <div class="row"><input id="bAmt" class="amount" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Сумма в рублях"><div class="token"><span class="badge">₽</span>RUB</div></div>
+  <div class="usd" id="bLim"></div>
+</section>
+<div style="height:12px"></div>
+<section class="card">
+  <div class="label">Вы получаете</div>
+  <div class="row"><input id="bOut" class="amount out" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Сколько криптовалюты получить"><button class="token" id="bTok" aria-label="Выбрать монету"></button></div>
+  </section>
+<div class="info">
+  <div><span>Курс</span><span id="bRate">—</span></div>
+  <div><span>Оплата</span><span id="bPay">—</span></div>
+  <div><span>Время</span><span>около 15 минут</span></div>
+</div>
+<div class="spacer"></div>
+<button class="cta" id="bCta" disabled>Введите сумму</button>
+</main>
+
+<main class="view" id="v-swap">
 <header>
   <h1>Обмен</h1>
   <div class="status"><i></i><span id="upd">Курс загружается</span></div>
@@ -156,7 +188,7 @@ h1{font-family:var(--serif);font-weight:400;font-size:34px;letter-spacing:-.01em
 
 <div class="info">
   <div><span>Курс</span><span id="rate">—</span></div>
-  <div><span>Комиссия</span><span>0,5%</span></div>
+  <div><span>Комиссия</span><span id="feeTxt">0,5%</span></div>
   <div><span>Время обмена</span><span>около 5 минут</span></div>
 </div>
 
@@ -181,8 +213,14 @@ h1{font-family:var(--serif);font-weight:400;font-size:34px;letter-spacing:-.01em
   <div id="flowBody" style="display:flex;flex-direction:column;flex:1"></div>
 </main>
 
+<main class="view" id="v-admin">
+  <header><button class="back" id="admBack">Назад</button><span class="status">Админ-панель</span></header>
+  <div id="admBody"></div>
+</main>
+
 <nav class="tabs">
-  <button class="tab on" data-v="swap"><svg viewBox="0 0 24 24"><path d="M7 7h11M18 7l-3-3M18 7l-3 3M17 17H6M6 17l3-3M6 17l3 3"/></svg>Обмен</button>
+  <button class="tab on" data-v="buy"><svg viewBox="0 0 24 24"><rect x="3.5" y="6.5" width="17" height="12" rx="3"/><path d="M3.5 10.5h17M16 14.5h1.5"/></svg>Покупка</button>
+  <button class="tab" data-v="swap"><svg viewBox="0 0 24 24"><path d="M7 7h11M18 7l-3-3M18 7l-3 3M17 17H6M6 17l3-3M6 17l3 3"/></svg>Обмен</button>
   <button class="tab" data-v="hist"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>История</button>
   <button class="tab" data-v="prof"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.5"/><path d="M5 19.5c1-3.5 4-5 7-5s6 1.5 7 5"/></svg>Профиль</button>
 </nav>
@@ -202,7 +240,10 @@ if (tg) {
 }
 const haptic = (t='light') => { try { tg.HapticFeedback.impactOccurred(t); } catch(e){} };
 
-const FEE = 0.005;
+let FEE = 0.005; try { const f = localStorage.getItem('fee'); if (f) FEE = parseFloat(f); } catch(e){}
+let paused = false; try { paused = localStorage.getItem('paused') === '1'; } catch(e){}
+const ADMIN_IDS = []; // впишите сюда свой Telegram ID, например [123456789]
+const pct = () => (FEE * 100).toLocaleString('ru-RU', {maximumFractionDigits:2}) + '%';
 const tokens = [
   {sym:'BTC',  name:'Bitcoin',  cg:'bitcoin',         price:95000, dec:6},
   {sym:'ETH',  name:'Ethereum', cg:'ethereum',        price:3200,  dec:5},
@@ -211,6 +252,7 @@ const tokens = [
   {sym:'SOL',  name:'Solana',   cg:'solana',          price:190,   dec:4},
 ];
 const by = s => tokens.find(t => t.sym === s);
+tokens.forEach(t => t.rub = t.price * 95);
 let from = 'BTC', to = 'USDT', pick = null;
 
 const $ = id => document.getElementById(id);
@@ -232,8 +274,9 @@ function render(){
   $('toUsd').textContent = a > 0 ? usdFmt(out * t.price) : '';
   $('rate').textContent = `1 ${from} = ${fmt(raw, t.dec)} ${to}`;
   const cta = $('cta');
-  cta.disabled = !(a > 0);
-  cta.textContent = a > 0 ? 'Обменять' : 'Введите сумму';
+  $('feeTxt').textContent = pct();
+  cta.disabled = !(a > 0) || paused;
+  cta.textContent = paused ? 'Обмен временно недоступен' : (a > 0 ? 'Обменять' : 'Введите сумму');
 }
 
 $('amt').addEventListener('input', e => {
@@ -250,12 +293,12 @@ $('swap').addEventListener('click', () => {
 
 function openSheet(which){
   pick = which; haptic();
-  const cur = which === 'from' ? from : to;
+  const cur = which === 'from' ? from : which === 'buy' ? buyTok : to;
   $('list').innerHTML = tokens.map(t => `
     <button class="opt ${t.sym===cur?'sel':''}" data-s="${t.sym}">
       <span class="badge">${t.sym[0]}</span>
       <span>${t.sym}<small>${t.name}</small></span>
-      <span class="price">${fmt(t.price, t.price < 10 ? 2 : 0)} $</span>
+      <span class="price">${which === 'buy' ? fmt(t.rub, t.rub < 100 ? 2 : 0) + ' ₽' : fmt(t.price, t.price < 10 ? 2 : 0) + ' $'}</span>
     </button>`).join('');
   $('ov').classList.add('open'); $('sheet').classList.add('open');
 }
@@ -267,6 +310,7 @@ $('ov').onclick = closeSheet;
 $('list').addEventListener('click', e => {
   const b = e.target.closest('.opt'); if (!b) return;
   const s = b.dataset.s;
+  if (pick === 'buy') { buyTok = s; closeSheet(); haptic(); renderBuy(); return; }
   if (pick === 'from') { if (s === to) to = from; from = s; }
   else { if (s === from) from = to; to = s; }
   $('amt').value = '';
@@ -282,11 +326,12 @@ const saveHist = () => { try { localStorage.setItem('hist', JSON.stringify(hist)
 let order = null;
 
 function show(v){
-  ['swap','hist','prof','flow'].forEach(x => $('v-'+x).classList.toggle('on', x === v));
+  ['buy','swap','hist','prof','flow','admin'].forEach(x => $('v-'+x).classList.toggle('on', x === v));
   document.body.classList.toggle('inflow', v === 'flow');
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.v === v));
   if (v === 'hist') renderHist();
   if (v === 'prof') renderProf();
+  if (v === 'admin') renderAdmin();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => { haptic(); show(t.dataset.v); });
@@ -298,7 +343,7 @@ function startFlow(){
 }
 $('flowBack').onclick = () => {
   if (order && order.step === 2) { order.step = 1; renderFlow(); }
-  else show('swap');
+  else show(order && order.type === 'buy' ? 'buy' : 'swap');
 };
 
 function renderFlow(){
@@ -306,20 +351,23 @@ function renderFlow(){
   document.querySelectorAll('#prog i').forEach((e,i) => e.classList.toggle('on', i < o.step));
   $('flowTitle').textContent = ['','Подтверждение','Отправка','Готово'][o.step];
   $('flowBack').style.visibility = o.step === 3 ? 'hidden' : 'visible';
+  if (o.step === 2 && o.type === 'buy') { renderBuyPay(); return; }
 
   if (o.step === 1) {
     b.innerHTML = `
       <div class="card">
-        <div class="kv"><span>Отдаёте</span><span>${esc(o.amt)} ${o.from}</span></div>
+        <div class="kv"><span>Отдаёте</span><span>${esc(o.amt)} ${cs(o.from)}</span></div>
         <div class="kv"><span>Получаете</span><span>${esc(o.out)} ${o.to}</span></div>
         <div class="kv"><span>Курс</span><span>${esc(o.rate)}</span></div>
-        <div class="kv"><span>Комиссия</span><span>0,5%</span></div>
+        <div class="kv"><span>Комиссия</span><span>${o.type === 'buy' ? 'включена в курс' : pct()}</span></div>
       </div>
-      <p class="sub" style="margin-top:22px">Адрес кошелька для получения ${o.to}</p>
-      <input class="field" id="addrIn" placeholder="Вставьте адрес" autocomplete="off" value="${esc(o.addr)}">
+      ${o.type === 'buy'
+        ? `<p class="sub" style="margin-top:22px">Купленные ${o.to} появятся на балансе в профиле после подтверждения оплаты.</p>`
+        : `<p class="sub" style="margin-top:22px">Адрес кошелька для получения ${o.to}</p>
+      <input class="field" id="addrIn" placeholder="Вставьте адрес" autocomplete="off" value="${esc(o.addr)}">`}
       <div class="spacer"></div>
-      <button class="cta" id="next" ${o.addr.length < 10 ? 'disabled' : ''}>Продолжить</button>`;
-    $('addrIn').oninput = e => { o.addr = e.target.value.trim(); $('next').disabled = o.addr.length < 10; };
+      <button class="cta" id="next" ${o.type !== 'buy' && o.addr.length < 10 ? 'disabled' : ''}>Продолжить</button>`;
+    if ($('addrIn')) $('addrIn').oninput = e => { o.addr = e.target.value.trim(); $('next').disabled = o.addr.length < 10; };
     $('next').onclick = () => { haptic(); o.step = 2; renderFlow(); };
   }
 
@@ -337,15 +385,7 @@ function renderFlow(){
       try { navigator.clipboard.writeText(o.dep); } catch(e){}
       haptic(); $('copy').textContent = 'Скопировано';
     };
-    $('sent').onclick = () => {
-      haptic('medium'); o.step = 3; o.done = false;
-      const rec = {id:o.id, from:o.from, to:o.to, amt:o.amt, out:o.out, ts:Date.now(), st:'В обработке'};
-      hist.unshift(rec); saveHist(); renderFlow();
-      setTimeout(() => {
-        rec.st = 'Завершён'; saveHist(); o.done = true;
-        if (order === o && o.step === 3) renderFlow();
-      }, 2200);
-    };
+    $('sent').onclick = confirmSent;
   }
 
   if (o.step === 3) {
@@ -353,7 +393,7 @@ function renderFlow(){
       <div class="big">${o.done ? 'Обмен завершён' : 'Проверяем перевод'}</div>
       <p class="sub">${o.done
         ? `${esc(o.out)} ${o.to} отправлены на ваш кошелёк.`
-        : 'Обычно это занимает несколько минут. Статус появится в истории.'}</p>
+        : (o.type === 'buy' ? 'Монеты зачислятся на баланс в профиле после подтверждения оплаты.' : 'Обычно это занимает несколько минут. Статус появится в истории.')}</p>
       <div class="card" style="margin-top:22px">
         <div class="kv"><span>Заявка</span><span>№${o.id}</span></div>
         <div class="kv"><span>Статус</span><span class="${o.done ? 'ok' : 'wait'}">${o.done ? 'Завершён' : 'В обработке'}</span></div>
@@ -362,7 +402,10 @@ function renderFlow(){
       <button class="ghost" id="toHist">Открыть историю</button>
       <button class="cta" id="fin" style="margin-top:10px">Готово</button>`;
     $('toHist').onclick = () => show('hist');
-    $('fin').onclick = () => { $('amt').value = ''; render(); show('swap'); };
+    $('fin').onclick = () => {
+      if (o.type === 'buy') { $('bAmt').value = ''; $('bOut').value = ''; buySrc = 'rub'; renderBuy(); show('buy'); }
+      else { $('amt').value = ''; render(); show('swap'); }
+    };
   }
 }
 
@@ -374,45 +417,272 @@ function renderHist(){
   }
   b.innerHTML = hist.map(h => `
     <div class="hi">
-      <div>${h.from} → ${h.to}<small>${new Date(h.ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} · №${h.id}</small></div>
-      <div class="r">+${esc(h.out)} ${h.to}<small class="${h.st === 'Завершён' ? 'ok' : 'wait'}">${h.st}</small></div>
+      <div>${cs(h.from)} → ${cs(h.to)}<small>${new Date(h.ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} · №${h.id}</small></div>
+      <div class="r">+${esc(h.out)} ${h.to}<small class="${h.st === 'Завершён' ? 'ok' : h.st === 'Отклонён' ? 'bad' : 'wait'}">${h.st}</small></div>
     </div>`).join('');
 }
 
 function renderProf(){
   const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
   const name = u.first_name || 'Гость';
+  const owned = tokens.filter(t => bal[t.sym] > 0);
+  const total = owned.reduce((x, t) => x + bal[t.sym] * t.rub, 0);
+  const isAdmin = ADMIN_IDS.length === 0 || ADMIN_IDS.includes(u.id);
   let notif = true; try { notif = localStorage.getItem('notif') !== '0'; } catch(e){}
   $('profBody').innerHTML = `
     <div class="me"><div class="ava">${esc(name[0].toUpperCase())}</div>
       <div><b>${esc(name)}</b><span class="sub">${u.username ? '@' + esc(u.username) : 'Telegram'}</span></div></div>
     <div class="card" style="margin-bottom:18px">
+      <div class="label">Баланс</div>
+      <div class="big" style="margin:0 0 6px">${fmt(total, 2)} ₽</div>
+      ${owned.length ? owned.map(t => `<div class="kv"><span>${t.sym}</span><span>${fmt(bal[t.sym], t.dec)}</span></div>`).join('') : '<p class="sub">Купленная криптовалюта появится здесь.</p>'}
+    </div>
+    <div class="card" style="margin-bottom:18px">
       <div class="kv"><span>Обменов</span><span>${hist.length}</span></div>
     </div>
     <button class="set" id="nt">Уведомления<span class="tg ${notif ? 'on' : ''}"></span></button>
     <button class="set" id="clr">Очистить историю<em>${hist.length}</em></button>
+    ${isAdmin ? `<button class="set" id="adm">Админ-панель<em>${ADMIN_IDS.length ? '' : 'Демо'}</em></button>` : ''}
     <button class="set" id="about">О сервисе<em>Демо</em></button>`;
   $('nt').onclick = () => {
     notif = !notif; try { localStorage.setItem('notif', notif ? '1' : '0'); } catch(e){}
     haptic(); renderProf();
   };
   $('clr').onclick = () => { hist = []; saveHist(); haptic(); renderProf(); };
+  if ($('adm')) $('adm').onclick = () => { haptic(); show('admin'); };
   $('about').onclick = () => { const m = 'Демо-версия обменника. Реальные переводы пока не проводятся.'; try { tg.showAlert(m); } catch(e){ alert(m); } };
 }
+
+function renderAdmin(){
+  const num = h => parseFloat(String(h.amt).replace(',', '.')) || 0;
+  const live = hist.filter(h => h.st !== 'Отклонён');
+  const vol = live.reduce((x, h) => x + (h.from === 'RUB' ? num(h) / by('USDT').rub : num(h) * by(h.from).price), 0);
+  const fld = (id, lab, val, mode) => `<div class="lbl">${lab}</div><input class="field" id="${id}" ${mode ? `inputmode="${mode}"` : ''} value="${esc(val)}">`;
+  const reqSum = req.list.length ? `${req.list.length} из 5` : 'Не заданы';
+  const cnt = st => hist.filter(h => h.st === st).length;
+  $('admBody').innerHTML = `
+    <div class="sec" style="margin-top:6px">Приём заявок</div>
+    <button class="set" id="pz">${paused ? 'Обмен приостановлен' : 'Обмен работает'}<span class="tg ${paused ? '' : 'on'}"></span></button>
+
+    <div class="sec">Покупка за рубли</div>
+    <button class="set" id="bz">${req.on ? 'Покупка включена' : 'Покупка выключена'}<span class="tg ${req.on ? 'on' : ''}"></span></button>
+    <button class="set" id="rTog">Реквизиты<em>${reqOpen ? 'Свернуть' : reqSum}</em></button>
+    ${reqOpen ? reqHtml() : ''}
+
+    <div class="sec">Комиссия обмена</div>
+    <div class="row2">
+      <input class="field" id="feeIn" inputmode="decimal" value="${(FEE * 100).toString().replace('.', ',')}" aria-label="Комиссия в процентах">
+      <button class="ghost" id="feeSave">Сохранить</button>
+    </div>
+    <p class="sub" style="margin-top:8px">В процентах. Применяется ко всем новым расчётам.</p>
+
+    <div class="sec">Публикация настроек</div>
+    <p class="sub">Изменения сохраняются на этом устройстве. Чтобы их увидели все клиенты, скопируйте настройки и вставьте в файл config.json в репозитории.</p>
+    <button class="ghost" id="cfgCp">Показать и скопировать настройки</button>
+    <textarea class="field" id="cfgTx" readonly rows="8" style="display:none"></textarea>
+
+    <div class="sec">Статистика</div>
+    <div class="card">
+      <div class="kv"><span>Всего заявок</span><span>${hist.length}</span></div>
+      <div class="kv"><span>В обработке</span><span>${cnt('В обработке')}</span></div>
+      <div class="kv"><span>Завершено</span><span>${cnt('Завершён')}</span></div>
+      <div class="kv"><span>Отклонено</span><span>${cnt('Отклонён')}</span></div>
+      <div class="kv"><span>Оборот</span><span>${usdFmt(vol)}</span></div>
+    </div>
+
+    <div class="sec">Заявки</div>
+    ${hist.length ? hist.map(h => `
+      <div class="hi" style="display:block">
+        <div style="display:flex;justify-content:space-between">
+          <div>${cs(h.from)} → ${cs(h.to)}<small>№${h.id} · ${new Date(h.ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</small></div>
+          <div class="r">${esc(h.amt)} ${cs(h.from)}<small class="${h.st === 'Завершён' ? 'ok' : h.st === 'Отклонён' ? 'bad' : 'wait'}">${h.st}</small></div>
+        </div>
+        ${h.addr ? `<p class="sub" style="word-break:break-all;margin-top:8px">Кошелёк клиента: ${esc(h.addr)}</p>` : ''}
+        ${h.pay ? `<p class="sub" style="margin-top:8px">Оплата на: ${esc(h.pay)}</p>` : ''}
+        ${h.st === 'В обработке' ? `<div class="mini"><button data-id="${h.id}" data-st="Отклонён">Отклонить</button><button class="pri" data-id="${h.id}" data-st="Завершён">${h.type === 'buy' ? 'Зачислить на баланс' : 'Завершить'}</button></div>` : ''}
+      </div>`).join('') : '<p class="sub">Заявок пока нет. Создайте тестовую на вкладке «Обмен».</p>'}
+    <p class="sub" style="margin-top:20px">Сейчас данные хранятся только на этом устройстве. Заявки других пользователей появятся после подключения сервера.</p>`;
+  $('bz').onclick = () => { req.on = !req.on; saveReq(); haptic(); renderBuy(); renderAdmin(); };
+  $('rTog').onclick = () => { reqOpen = !reqOpen; haptic(); renderAdmin(); };
+  $('admBody').querySelectorAll('[data-ri]').forEach(b => b.onclick = () => { const i = +b.dataset.ri; editIdx = editIdx === i ? null : i; haptic(); renderAdmin(); });
+  if ($('rAdd')) $('rAdd').onclick = () => { editIdx = 'new'; haptic(); renderAdmin(); };
+  if ($('rLim')) $('rLim').onclick = () => {
+    const n = id => parseFloat($(id).value.replace(',', '.'));
+    const mn = n('rMin'), mx = n('rMax'), mk = n('rMk');
+    if (!(mn > 0 && mx >= mn && mk >= 0 && mk <= 50)) { msg('Проверьте лимиты и наценку'); return; }
+    req.min = mn; req.max = mx; req.markup = mk;
+    saveReq(); reqOpen = false; haptic('medium'); renderBuy(); renderAdmin(); msg('Сохранено');
+  };
+  if ($('rSave')) $('rSave').onclick = () => {
+    const x = {bank:$('rBank').value.trim(), num:$('rNum').value.trim(), name:$('rName').value.trim(), note:$('rNote').value.trim()};
+    if (!x.num) { msg('Укажите номер карты или телефон'); return; }
+    if (editIdx === 'new') req.list.push(x); else req.list[editIdx] = x;
+    saveReq(); editIdx = null; reqOpen = false; haptic('medium'); renderBuy(); renderAdmin(); msg('Реквизит сохранён');
+  };
+  if ($('rDel')) $('rDel').onclick = () => {
+    const go = () => { req.list.splice(editIdx, 1); saveReq(); editIdx = null; haptic('medium'); renderBuy(); renderAdmin(); };
+    try { tg.showConfirm('Удалить реквизит?', ok => ok && go()); } catch(e){ if (confirm('Удалить реквизит?')) go(); }
+  };
+  $('cfgCp').onclick = () => {
+    const t = $('cfgTx'); t.value = JSON.stringify({fee:FEE, paused, req}, null, 2); t.style.display = 'block';
+    try { navigator.clipboard.writeText(t.value); $('cfgCp').textContent = 'Скопировано'; } catch(e){}
+  };
+  $('pz').onclick = () => { paused = !paused; try { localStorage.setItem('paused', paused ? '1' : '0'); } catch(e){} haptic(); render(); renderAdmin(); };
+  $('feeSave').onclick = () => {
+    const v = parseFloat($('feeIn').value.replace(',', '.'));
+    if (!(v >= 0 && v <= 10)) { try { tg.showAlert('Введите комиссию от 0 до 10'); } catch(e){ alert('Введите комиссию от 0 до 10'); } return; }
+    FEE = v / 100; try { localStorage.setItem('fee', FEE); } catch(e){}
+    haptic('medium'); render(); renderAdmin();
+  };
+  $('admBody').querySelectorAll('.mini button').forEach(b => b.onclick = () => {
+    const h = hist.find(x => String(x.id) === b.dataset.id); if (!h) return;
+    h.st = b.dataset.st;
+    if (h.st === 'Завершён' && h.type === 'buy' && !h.credited) {
+      const v = parseFloat(String(h.out).replace(',', '.')) || 0;
+      bal[h.to] = +((bal[h.to] || 0) + v).toFixed(8); h.credited = true; saveBal();
+    }
+    saveHist(); haptic('medium'); renderAdmin();
+  });
+}
+$('admBack').onclick = () => show('prof');
+
+/* ---------- покупка за рубли ---------- */
+let buyTok = 'USDT';
+let req = {list:[], min:1000, max:100000, markup:3, on:true};
+try { Object.assign(req, JSON.parse(localStorage.getItem('req') || '{}')); } catch(e){}
+fixReq();
+const saveReq = () => { try { localStorage.setItem('req', JSON.stringify(req)); } catch(e){} };
+const msg = m => { try { tg.showAlert(m); } catch(e){ alert(m); } };
+const bnum = () => parseFloat(($('bAmt').value || '').replace(',', '.')) || 0;
+const bRate = () => by(buyTok).rub * (1 + req.markup / 100);
+
+let buySrc = 'rub';
+let reqOpen = false;
+const plain = (n, d) => String(parseFloat(n.toFixed(d))).replace('.', ',');
+const cs = c => c === 'RUB' ? '₽' : c;
+
+function renderBuy(){
+  const t = by(buyTok), r = bRate();
+  const num = id => parseFloat(($(id).value || '').replace(',', '.')) || 0;
+  let a, out;
+  if (buySrc === 'out') { out = num('bOut'); a = out * r; $('bAmt').value = out > 0 ? plain(a, 2) : ''; }
+  else { a = num('bAmt'); out = a > 0 ? a / r : 0; $('bOut').value = a > 0 ? plain(out, t.dec) : ''; }
+  tokenBtn($('bTok'), buyTok);
+  $('bRate').textContent = `1 ${buyTok} = ${fmt(r, r < 100 ? 2 : 0)} ₽`;
+  const pl = req.list.filter(x => x.num);
+  $('bPay').textContent = pl.length > 1 ? 'Несколько банков' : (pl[0] && pl[0].bank) || 'Банковский перевод';
+  $('bLim').textContent = `От ${fmt(req.min, 0)} до ${fmt(req.max, 0)} ₽`;
+  const c = $('bCta');
+  c.disabled = !(a > 0) || a < req.min || a > req.max || !req.on;
+  c.textContent = !req.on ? 'Покупка временно недоступна' : a <= 0 ? 'Введите сумму'
+    : a < req.min ? `Минимум ${fmt(req.min, 0)} ₽` : a > req.max ? `Максимум ${fmt(req.max, 0)} ₽` : 'Купить';
+}
+$('bAmt').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9.,]/g, ''); buySrc = 'rub'; renderBuy(); });
+$('bOut').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9.,]/g, ''); buySrc = 'out'; renderBuy(); });
+$('bTok').onclick = () => openSheet('buy');
+$('bCta').onclick = () => {
+  haptic('medium');
+  order = {type:'buy', from:'RUB', to:buyTok, amt:$('bAmt').value, out:$('bOut').value, rate:$('bRate').textContent,
+           id:Math.floor(100000 + Math.random()*900000), step:1, addr:''};
+  show('flow'); renderFlow();
+};
+
+function confirmSent(){
+  const o = order; haptic('medium'); o.step = 3; o.done = false;
+  const rec = {id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr, pay:o.pay || '', ts:Date.now(), st:'В обработке'};
+  hist.unshift(rec); saveHist(); notify(rec); renderFlow();
+}
+
+function renderBuyPay(){
+  const o = order, list = req.list.filter(x => x.num);
+  const i = Math.min(o.ri || 0, Math.max(list.length - 1, 0)), r = list[i] || null;
+  o.pay = r ? [r.bank, r.num].filter(Boolean).join(' · ') : '';
+  const sum = fmt(parseFloat(o.amt.replace(',', '.')) || 0, 2);
+  $('flowBody').innerHTML = `
+    <div class="big">Переведите ${sum} ₽</div>
+    <p class="sub">Заявка №${o.id}. Переведите точную сумму по реквизитам ниже.</p>
+    ${list.length > 1 ? `<div class="chips">${list.map((x, k) => `<button class="chip ${k === i ? 'on' : ''}" data-k="${k}">${esc(x.bank || 'Реквизит ' + (k + 1))}</button>`).join('')}</div>` : ''}
+    <div class="card" style="margin-top:18px">
+      <div class="kv"><span>Банк</span><span>${esc(r ? r.bank || '—' : '—')}</span></div>
+      <div class="kv"><span>Номер</span><span>${esc(r ? r.num : 'не указан')}</span></div>
+      <div class="kv"><span>Получатель</span><span>${esc(r ? r.name || '—' : '—')}</span></div>
+    </div>
+    <button class="ghost" id="copy" ${r ? '' : 'disabled'}>Скопировать номер</button>
+    ${r && r.note ? `<p class="sub" style="margin-top:16px">${esc(r.note)}</p>` : ''}
+    ${r ? '' : '<p class="sub" style="margin-top:16px">Реквизиты ещё не заданы. Попробуйте позже.</p>'}
+    <div class="spacer"></div>
+    <button class="cta" id="sent" ${r ? '' : 'disabled'}>Я оплатил</button>`;
+  document.querySelectorAll('.chip').forEach(c => c.onclick = () => { o.ri = +c.dataset.k; haptic(); renderBuyPay(); });
+  if (r) $('copy').onclick = () => { try { navigator.clipboard.writeText(r.num); } catch(e){} haptic(); $('copy').textContent = 'Скопировано'; };
+  $('sent').onclick = confirmSent;
+}
+
+async function loadConfig(){
+  try {
+    const r = await fetch('config.json?' + Date.now());
+    if (r.ok) {
+      const c = await r.json();
+      if (c.req && !localStorage.getItem('req')) { Object.assign(req, c.req); fixReq(); }
+      if (typeof c.fee === 'number' && localStorage.getItem('fee') === null) FEE = c.fee;
+      if (typeof c.paused === 'boolean' && localStorage.getItem('paused') === null) paused = c.paused;
+    }
+  } catch(e){}
+  render(); renderBuy();
+}
+
+/* ---------- реквизиты (до 5) и уведомления ---------- */
+const API_URL = ''; // адрес воркера для уведомлений, см. инструкцию
+let editIdx = null;
+
+function fixReq(){
+  if (!Array.isArray(req.list)) req.list = [];
+  if ((req.num || req.bank) && !req.list.length) req.list.push({bank:req.bank || '', num:req.num || '', name:req.name || '', note:req.note || ''});
+  ['bank','num','name','note'].forEach(k => delete req[k]);
+  req.list = req.list.slice(0, 5);
+}
+
+function reqHtml(){
+  const f = (id, lab, val, mode) => `<div class="lbl">${lab}</div><input class="field" id="${id}" ${mode ? `inputmode="${mode}"` : ''} value="${esc(val)}">`;
+  const last4 = x => x.num ? '•••• ' + x.num.replace(/\D/g, '').slice(-4) : 'без номера';
+  const form = x => f('rBank', 'Банк', x.bank || '') + f('rNum', 'Номер карты или телефон для СБП', x.num || '') +
+    f('rName', 'Получатель', x.name || '') + f('rNote', 'Комментарий для клиента', x.note || '') +
+    `<div class="mini" style="margin-bottom:6px">${editIdx === 'new' ? '' : '<button id="rDel">Удалить</button>'}<button class="pri" id="rSave">Сохранить</button></div>`;
+  let h = f('rMin', 'Минимальная сумма покупки, ₽', req.min, 'numeric') + f('rMax', 'Максимальная сумма, ₽', req.max, 'numeric') +
+    f('rMk', 'Наценка к курсу, %', req.markup, 'decimal') + '<button class="ghost" id="rLim" style="margin-top:14px">Сохранить лимиты</button>';
+  h += `<div class="lbl" style="margin-top:24px">Реквизиты · ${req.list.length} из 5</div>`;
+  req.list.forEach((x, i) => {
+    h += `<button class="set" data-ri="${i}">${esc(x.bank || 'Без названия')} · ${last4(x)}<em>${editIdx === i ? 'Закрыть' : 'Изменить'}</em></button>`;
+    if (editIdx === i) h += form(x);
+  });
+  if (editIdx === 'new') h += form({});
+  else if (req.list.length < 5) h += '<button class="ghost" id="rAdd">Добавить реквизит</button>';
+  return h;
+}
+
+async function notify(rec){
+  if (!API_URL) return;
+  try {
+    await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({initData:(tg && tg.initData) || '', order:rec})});
+  } catch(e){}
+}
+
+let bal = {}; try { bal = JSON.parse(localStorage.getItem('bal') || '{}'); } catch(e){}
+const saveBal = () => { try { localStorage.setItem('bal', JSON.stringify(bal)); } catch(e){} };
 
 async function loadRates(){
   try {
     const ids = tokens.map(t => t.cg).join(',');
-    const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+    const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,rub`);
     const d = await r.json();
-    tokens.forEach(t => { if (d[t.cg] && d[t.cg].usd) t.price = d[t.cg].usd; });
-    $('upd').textContent = 'Курс обновлён';
+    tokens.forEach(t => { if (d[t.cg] && d[t.cg].usd) t.price = d[t.cg].usd; if (d[t.cg] && d[t.cg].rub) t.rub = d[t.cg].rub; });
+    $('upd').textContent = $('bupd').textContent = 'Курс обновлён';
   } catch(e) {
-    $('upd').textContent = 'Курс ориентировочный';
+    $('upd').textContent = $('bupd').textContent = 'Курс ориентировочный';
   }
-  render();
+  render(); renderBuy();
 }
-render(); loadRates();
+render(); renderBuy(); loadRates(); loadConfig();
 setInterval(loadRates, 60000);
 </script>
 </body>
