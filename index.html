@@ -534,7 +534,7 @@ function renderAdmin(){
     FEE = v / 100; try { localStorage.setItem('fee', FEE); } catch(e){}
     haptic('medium'); render(); renderAdmin();
   };
-  $('admBody').querySelectorAll('.mini button').forEach(b => b.onclick = () => {
+  $('admBody').querySelectorAll('.mini button[data-id]').forEach(b => b.onclick = () => {
     const h = hist.find(x => String(x.id) === b.dataset.id); if (!h) return;
     h.st = b.dataset.st;
     if (h.st === 'Завершён' && h.type === 'buy' && !h.credited) {
