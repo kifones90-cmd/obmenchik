@@ -1,2 +1,0 @@
-# obmenchik
-obmen
