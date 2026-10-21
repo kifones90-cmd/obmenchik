@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="settings.js"></script>
 <style>
 :root{
   --bg:#0D0F12; --surface:#14171C; --raise:#1B1F26; --line:#242932;
@@ -331,7 +332,8 @@ function show(v){
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.v === v));
   if (v === 'hist') renderHist();
   if (v === 'prof') renderProf();
-  if (v === 'admin') renderAdmin();
+  if (v === 'admin') { renderAdmin(); if (SERVER) loadAdmin(); }
+  if (SERVER && (v === 'hist' || v === 'prof')) boot().then(() => { if ($('v-' + v).classList.contains('on')) { v === 'hist' ? renderHist() : renderProf(); } });
   window.scrollTo(0, 0);
 }
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => { haptic(); show(t.dataset.v); });
@@ -427,7 +429,7 @@ function renderProf(){
   const name = u.first_name || 'Гость';
   const owned = tokens.filter(t => bal[t.sym] > 0);
   const total = owned.reduce((x, t) => x + bal[t.sym] * t.rub, 0);
-  const isAdmin = ADMIN_IDS.length === 0 || ADMIN_IDS.includes(u.id);
+  const isAdmin = SERVER ? isAdminSrv : (ADMIN_IDS.length === 0 || ADMIN_IDS.includes(u.id));
   let notif = true; try { notif = localStorage.getItem('notif') !== '0'; } catch(e){}
   $('profBody').innerHTML = `
     <div class="me"><div class="ava">${esc(name[0].toUpperCase())}</div>
@@ -441,25 +443,27 @@ function renderProf(){
       <div class="kv"><span>Обменов</span><span>${hist.length}</span></div>
     </div>
     <button class="set" id="nt">Уведомления<span class="tg ${notif ? 'on' : ''}"></span></button>
-    <button class="set" id="clr">Очистить историю<em>${hist.length}</em></button>
-    ${isAdmin ? `<button class="set" id="adm">Админ-панель<em>${ADMIN_IDS.length ? '' : 'Демо'}</em></button>` : ''}
+    ${SERVER ? '' : `<button class="set" id="clr">Очистить историю<em>${hist.length}</em></button>`}
+    ${isAdmin ? `<button class="set" id="adm">Админ-панель<em>${SERVER || ADMIN_IDS.length ? '' : 'Демо'}</em></button>` : ''}
     <button class="set" id="about">О сервисе<em>Демо</em></button>`;
   $('nt').onclick = () => {
     notif = !notif; try { localStorage.setItem('notif', notif ? '1' : '0'); } catch(e){}
     haptic(); renderProf();
   };
-  $('clr').onclick = () => { hist = []; saveHist(); haptic(); renderProf(); };
+  if ($('clr')) $('clr').onclick = () => { hist = []; saveHist(); haptic(); renderProf(); };
   if ($('adm')) $('adm').onclick = () => { haptic(); show('admin'); };
   $('about').onclick = () => { const m = 'Демо-версия обменника. Реальные переводы пока не проводятся.'; try { tg.showAlert(m); } catch(e){ alert(m); } };
 }
 
 function renderAdmin(){
+  const H0 = SERVER ? allOrders : hist;
+  const H = admFilter === 'all' ? H0 : H0.filter(h => h.st === admFilter);
   const num = h => parseFloat(String(h.amt).replace(',', '.')) || 0;
-  const live = hist.filter(h => h.st !== 'Отклонён');
+  const live = H0.filter(h => h.st !== 'Отклонён');
   const vol = live.reduce((x, h) => x + (h.from === 'RUB' ? num(h) / by('USDT').rub : num(h) * by(h.from).price), 0);
   const fld = (id, lab, val, mode) => `<div class="lbl">${lab}</div><input class="field" id="${id}" ${mode ? `inputmode="${mode}"` : ''} value="${esc(val)}">`;
   const reqSum = req.list.length ? `${req.list.length} из 5` : 'Не заданы';
-  const cnt = st => hist.filter(h => h.st === st).length;
+  const cnt = st => H0.filter(h => h.st === st).length;
   $('admBody').innerHTML = `
     <div class="sec" style="margin-top:6px">Приём заявок</div>
     <button class="set" id="pz">${paused ? 'Обмен приостановлен' : 'Обмен работает'}<span class="tg ${paused ? '' : 'on'}"></span></button>
@@ -476,14 +480,20 @@ function renderAdmin(){
     </div>
     <p class="sub" style="margin-top:8px">В процентах. Применяется ко всем новым расчётам.</p>
 
+    <div class="sec">Уведомления</div>
+    <p class="sub">Отправит тестовое сообщение всем администраторам и покажет, если что-то не настроено.</p>
+    <button class="ghost" id="ntTest">Отправить тестовое уведомление</button>
+
+    ${SERVER ? '' : `
     <div class="sec">Публикация настроек</div>
     <p class="sub">Изменения сохраняются на этом устройстве. Чтобы их увидели все клиенты, скопируйте настройки и вставьте в файл config.json в репозитории.</p>
     <button class="ghost" id="cfgCp">Показать и скопировать настройки</button>
     <textarea class="field" id="cfgTx" readonly rows="8" style="display:none"></textarea>
+    `}
 
     <div class="sec">Статистика</div>
     <div class="card">
-      <div class="kv"><span>Всего заявок</span><span>${hist.length}</span></div>
+      <div class="kv"><span>Всего заявок</span><span>${H0.length}</span></div>
       <div class="kv"><span>В обработке</span><span>${cnt('В обработке')}</span></div>
       <div class="kv"><span>Завершено</span><span>${cnt('Завершён')}</span></div>
       <div class="kv"><span>Отклонено</span><span>${cnt('Отклонён')}</span></div>
@@ -491,17 +501,18 @@ function renderAdmin(){
     </div>
 
     <div class="sec">Заявки</div>
-    ${hist.length ? hist.map(h => `
+    <div class="chips" style="margin:4px 0">${['all','В обработке','Завершён','Отклонён'].map(f => `<button class="chip ${admFilter === f ? 'on' : ''}" data-f="${f}">${f === 'all' ? 'Все' : f}</button>`).join('')}</div>
+    ${H.length ? H.map(h => `
       <div class="hi" style="display:block">
         <div style="display:flex;justify-content:space-between">
-          <div>${cs(h.from)} → ${cs(h.to)}<small>№${h.id} · ${new Date(h.ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</small></div>
+          <div>${cs(h.from)} → ${cs(h.to)}<small>№${h.id} · ${new Date(h.ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${h.un ? ' · ' + esc(h.un) : ''}</small></div>
           <div class="r">${esc(h.amt)} ${cs(h.from)}<small class="${h.st === 'Завершён' ? 'ok' : h.st === 'Отклонён' ? 'bad' : 'wait'}">${h.st}</small></div>
         </div>
         ${h.addr ? `<p class="sub" style="word-break:break-all;margin-top:8px">Кошелёк клиента: ${esc(h.addr)}</p>` : ''}
         ${h.pay ? `<p class="sub" style="margin-top:8px">Оплата на: ${esc(h.pay)}</p>` : ''}
-        ${h.st === 'В обработке' ? `<div class="mini"><button data-id="${h.id}" data-st="Отклонён">Отклонить</button><button class="pri" data-id="${h.id}" data-st="Завершён">${h.type === 'buy' ? 'Зачислить на баланс' : 'Завершить'}</button></div>` : ''}
+        ${h.st === 'В обработке' ? `<div class="mini"><button data-id="${h.id}" data-key="${h.key || ''}" data-st="Отклонён">Отклонить</button><button class="pri" data-id="${h.id}" data-key="${h.key || ''}" data-st="Завершён">${h.type === 'buy' ? 'Зачислить на баланс' : 'Завершить'}</button></div>` : ''}
       </div>`).join('') : '<p class="sub">Заявок пока нет. Создайте тестовую на вкладке «Обмен».</p>'}
-    <p class="sub" style="margin-top:20px">Сейчас данные хранятся только на этом устройстве. Заявки других пользователей появятся после подключения сервера.</p>`;
+    ${SERVER ? '' : '<p class="sub" style="margin-top:20px">Сервер не подключён: данные хранятся только на этом устройстве.</p>'}`;
   $('bz').onclick = () => { req.on = !req.on; saveReq(); haptic(); renderBuy(); renderAdmin(); };
   $('rTog').onclick = () => { reqOpen = !reqOpen; haptic(); renderAdmin(); };
   $('admBody').querySelectorAll('[data-ri]').forEach(b => b.onclick = () => { const i = +b.dataset.ri; editIdx = editIdx === i ? null : i; haptic(); renderAdmin(); });
@@ -523,18 +534,34 @@ function renderAdmin(){
     const go = () => { req.list.splice(editIdx, 1); saveReq(); editIdx = null; haptic('medium'); renderBuy(); renderAdmin(); };
     try { tg.showConfirm('Удалить реквизит?', ok => ok && go()); } catch(e){ if (confirm('Удалить реквизит?')) go(); }
   };
-  $('cfgCp').onclick = () => {
+  $('ntTest').onclick = async () => {
+    const btn = $('ntTest'); btn.textContent = 'Отправляем…';
+    const r = await api('admin.test').catch(e => ({ok:false, error:e.message}));
+    btn.textContent = 'Отправить тестовое уведомление';
+    const bad = (r.results || []).filter(x => !x.ok).map(x => x.id + ': ' + x.error);
+    msg((r.ok && !bad.length ? 'Отправлено. Проверьте сообщения от бота.' : 'Не отправлено: ' + (r.error || bad.join('; ') || 'неизвестная ошибка')).slice(0, 220));
+  };
+  if ($('cfgCp')) $('cfgCp').onclick = () => {
     const t = $('cfgTx'); t.value = JSON.stringify({fee:FEE, paused, req}, null, 2); t.style.display = 'block';
     try { navigator.clipboard.writeText(t.value); $('cfgCp').textContent = 'Скопировано'; } catch(e){}
   };
-  $('pz').onclick = () => { paused = !paused; try { localStorage.setItem('paused', paused ? '1' : '0'); } catch(e){} haptic(); render(); renderAdmin(); };
+  $('pz').onclick = () => { paused = !paused; try { localStorage.setItem('paused', paused ? '1' : '0'); } catch(e){} pushConfig(); haptic(); render(); renderAdmin(); };
   $('feeSave').onclick = () => {
     const v = parseFloat($('feeIn').value.replace(',', '.'));
     if (!(v >= 0 && v <= 10)) { try { tg.showAlert('Введите комиссию от 0 до 10'); } catch(e){ alert('Введите комиссию от 0 до 10'); } return; }
-    FEE = v / 100; try { localStorage.setItem('fee', FEE); } catch(e){}
+    FEE = v / 100; try { localStorage.setItem('fee', FEE); } catch(e){} pushConfig();
     haptic('medium'); render(); renderAdmin();
   };
-  $('admBody').querySelectorAll('.mini button[data-id]').forEach(b => b.onclick = () => {
+  $('admBody').querySelectorAll('[data-f]').forEach(b => b.onclick = () => { admFilter = b.dataset.f; haptic(); renderAdmin(); });
+  $('admBody').querySelectorAll('.mini button[data-id]').forEach(b => b.onclick = async () => {
+    if (SERVER) {
+      try {
+        await api('admin.status', {key:b.dataset.key, st:b.dataset.st});
+        const it = allOrders.find(x => x.key === b.dataset.key); if (it) it.st = b.dataset.st;
+        haptic('medium'); renderAdmin();
+      } catch(e){ msg(e.message); }
+      return;
+    }
     const h = hist.find(x => String(x.id) === b.dataset.id); if (!h) return;
     h.st = b.dataset.st;
     if (h.st === 'Завершён' && h.type === 'buy' && !h.credited) {
@@ -551,7 +578,7 @@ let buyTok = 'USDT';
 let req = {list:[], min:1000, max:100000, markup:3, on:true};
 try { Object.assign(req, JSON.parse(localStorage.getItem('req') || '{}')); } catch(e){}
 fixReq();
-const saveReq = () => { try { localStorage.setItem('req', JSON.stringify(req)); } catch(e){} };
+const saveReq = () => { try { localStorage.setItem('req', JSON.stringify(req)); } catch(e){} pushConfig(); };
 const msg = m => { try { tg.showAlert(m); } catch(e){ alert(m); } };
 const bnum = () => parseFloat(($('bAmt').value || '').replace(',', '.')) || 0;
 const bRate = () => by(buyTok).rub * (1 + req.markup / 100);
@@ -587,10 +614,19 @@ $('bCta').onclick = () => {
   show('flow'); renderFlow();
 };
 
-function confirmSent(){
-  const o = order; haptic('medium'); o.step = 3; o.done = false;
-  const rec = {id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr, pay:o.pay || '', ts:Date.now(), st:'В обработке'};
-  hist.unshift(rec); saveHist(); notify(rec); renderFlow();
+async function confirmSent(){
+  const o = order; haptic('medium');
+  const btn = $('sent'); if (btn) btn.disabled = true;
+  if (SERVER) {
+    try {
+      const r = await api('order.create', {order:{id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr, pay:o.pay || ''}});
+      hist.unshift(r.order);
+    } catch(e){ if (btn) btn.disabled = false; msg('Не удалось отправить заявку: ' + e.message); return; }
+  } else {
+    hist.unshift({id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr, pay:o.pay || '', ts:Date.now(), st:'В обработке'});
+    saveHist();
+  }
+  o.step = 3; o.done = false; renderFlow();
 }
 
 function renderBuyPay(){
@@ -612,7 +648,7 @@ function renderBuyPay(){
     ${r ? '' : '<p class="sub" style="margin-top:16px">Реквизиты ещё не заданы. Попробуйте позже.</p>'}
     <div class="spacer"></div>
     <button class="cta" id="sent" ${r ? '' : 'disabled'}>Я оплатил</button>`;
-  document.querySelectorAll('.chip').forEach(c => c.onclick = () => { o.ri = +c.dataset.k; haptic(); renderBuyPay(); });
+  document.querySelectorAll('#flowBody .chip').forEach(c => c.onclick = () => { o.ri = +c.dataset.k; haptic(); renderBuyPay(); });
   if (r) $('copy').onclick = () => { try { navigator.clipboard.writeText(r.num); } catch(e){} haptic(); $('copy').textContent = 'Скопировано'; };
   $('sent').onclick = confirmSent;
 }
@@ -631,7 +667,9 @@ async function loadConfig(){
 }
 
 /* ---------- реквизиты (до 5) и уведомления ---------- */
-const API_URL = 'https://royal-grass-9acd.kifones90.workers.dev/'; // адрес воркера для уведомлений, см. инструкцию
+const API_URL = (window.APP_SETTINGS && window.APP_SETTINGS.API_URL) || '';
+const SERVER = !!API_URL;
+let isAdminSrv = false, allOrders = [], admFilter = 'all';
 let editIdx = null;
 
 function fixReq(){
@@ -659,12 +697,44 @@ function reqHtml(){
   return h;
 }
 
-async function notify(rec){
-  if (!API_URL) return;
+async function api(action, data){
+  if (!API_URL) throw new Error('не заполнен API_URL (файл settings.js)');
+  let r;
   try {
-    await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({initData:(tg && tg.initData) || '', order:rec})});
-  } catch(e){}
+    r = await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action, initData:(tg && tg.initData) || '', ...data})});
+  } catch(e){ throw new Error('нет связи с сервером'); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.ok === false) throw new Error(j.error || ('код ' + r.status));
+  return j;
+}
+
+async function boot(){
+  try {
+    const r = await api('boot');
+    isAdminSrv = !!r.isAdmin;
+    if (r.config) {
+      if (typeof r.config.fee === 'number') FEE = r.config.fee;
+      paused = !!r.config.paused;
+      req = {...req, ...r.config.req}; fixReq();
+    } else if (isAdminSrv) pushConfig();
+    bal = r.balances || {};
+    const srv = r.orders || [];
+    const fresh = hist.filter(h => h.key && Date.now() - h.ts < 120000 && !srv.some(o => o.key === h.key));
+    hist = [...fresh, ...srv];
+  } catch(e){ $('upd').textContent = $('bupd').textContent = 'нет связи с сервером'; }
+  render(); renderBuy();
+}
+
+async function pushConfig(){
+  if (!SERVER || !isAdminSrv) return;
+  try { await api('admin.config', {config:{fee:FEE, paused, req}}); }
+  catch(e){ msg('Не сохранилось на сервере: ' + e.message); }
+}
+
+async function loadAdmin(){
+  try { allOrders = (await api('admin.orders')).orders || []; } catch(e){ msg(e.message); }
+  renderAdmin();
 }
 
 let bal = {}; try { bal = JSON.parse(localStorage.getItem('bal') || '{}'); } catch(e){}
@@ -682,7 +752,8 @@ async function loadRates(){
   }
   render(); renderBuy();
 }
-render(); renderBuy(); loadRates(); loadConfig();
+render(); renderBuy(); loadRates(); SERVER ? boot() : loadConfig();
+setInterval(() => { if (SERVER && isAdminSrv && $('v-admin').classList.contains('on')) loadAdmin(); }, 30000);
 setInterval(loadRates, 60000);
 </script>
 </body>
