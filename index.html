@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="settings.js"></script>
+<script>document.write('<script src="settings.js?v=' + Date.now() + '"><\/script>');</script>
 <style>
 :root{
   --bg:#0D0F12; --surface:#14171C; --raise:#1B1F26; --line:#242932;
@@ -429,7 +429,7 @@ function renderProf(){
   const name = u.first_name || 'Гость';
   const owned = tokens.filter(t => bal[t.sym] > 0);
   const total = owned.reduce((x, t) => x + bal[t.sym] * t.rub, 0);
-  const isAdmin = SERVER ? isAdminSrv : (ADMIN_IDS.length === 0 || ADMIN_IDS.includes(u.id));
+  const isAdmin = SERVER ? isAdminSrv : (ADMIN_IDS.includes(u.id) || !(tg && tg.initData));
   let notif = true; try { notif = localStorage.getItem('notif') !== '0'; } catch(e){}
   $('profBody').innerHTML = `
     <div class="me"><div class="ava">${esc(name[0].toUpperCase())}</div>
@@ -444,15 +444,16 @@ function renderProf(){
     </div>
     <button class="set" id="nt">Уведомления<span class="tg ${notif ? 'on' : ''}"></span></button>
     ${SERVER ? '' : `<button class="set" id="clr">Очистить историю<em>${hist.length}</em></button>`}
-    ${isAdmin ? `<button class="set" id="adm">Админ-панель<em>${SERVER || ADMIN_IDS.length ? '' : 'Демо'}</em></button>` : ''}
-    <button class="set" id="about">О сервисе<em>Демо</em></button>`;
+    ${isAdmin ? `<button class="set" id="adm">Админ-панель<em>${SERVER || ADMIN_IDS.includes(u.id) ? '' : 'Демо'}</em></button>` : ''}
+    <button class="set" id="about">О сервисе<em>Статус</em></button>
+    ${SERVER ? '' : '<p class="sub" style="margin-top:14px">Сервер не подключён: данные сохраняются только на этом устройстве.</p>'}`;
   $('nt').onclick = () => {
     notif = !notif; try { localStorage.setItem('notif', notif ? '1' : '0'); } catch(e){}
     haptic(); renderProf();
   };
   if ($('clr')) $('clr').onclick = () => { hist = []; saveHist(); haptic(); renderProf(); };
   if ($('adm')) $('adm').onclick = () => { haptic(); show('admin'); };
-  $('about').onclick = () => { const m = 'Демо-версия обменника. Реальные переводы пока не проводятся.'; try { tg.showAlert(m); } catch(e){ alert(m); } };
+  $('about').onclick = () => { const m = 'Статус сервера: ' + (SERVER ? (srvErr ? 'ошибка, ' + srvErr : 'подключён') : 'не подключён, не найден settings.js') + '.'; try { tg.showAlert(m); } catch(e){ alert(m); } };
 }
 
 function renderAdmin(){
@@ -669,7 +670,7 @@ async function loadConfig(){
 /* ---------- реквизиты (до 5) и уведомления ---------- */
 const API_URL = (window.APP_SETTINGS && window.APP_SETTINGS.API_URL) || '';
 const SERVER = !!API_URL;
-let isAdminSrv = false, allOrders = [], admFilter = 'all';
+let isAdminSrv = false, allOrders = [], admFilter = 'all', srvErr = '';
 let editIdx = null;
 
 function fixReq(){
@@ -722,7 +723,7 @@ async function boot(){
     const srv = r.orders || [];
     const fresh = hist.filter(h => h.key && Date.now() - h.ts < 120000 && !srv.some(o => o.key === h.key));
     hist = [...fresh, ...srv];
-  } catch(e){ $('upd').textContent = $('bupd').textContent = 'нет связи с сервером'; }
+  } catch(e){ srvErr = e.message; $('upd').textContent = $('bupd').textContent = 'нет связи с сервером'; }
   render(); renderBuy();
 }
 
