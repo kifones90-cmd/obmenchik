@@ -3,233 +3,257 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Обмен</title>
+<title>CRYPTA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>document.write('<script src="settings.js?v=' + Date.now() + '"><\/script>');</script>
 <style>
-:root{
-  --bg:#0D0F12; --surface:#14171C; --raise:#1B1F26; --line:#242932;
-  --text:#ECEAE4; --muted:#868C96; --accent:#CDB78B; --accent-ink:#1A150B;
-  --serif:'Instrument Serif',Georgia,'Times New Roman',serif;
-  --sans:'Inter Tight',-apple-system,'Segoe UI',Roboto,sans-serif;
-  color-scheme:dark;
-}
+:root{--bg:#080e0b;--surface:#111b14;--raise:#17251b;--deep:#142119;--line:#2a3a2e;--nav:#0d1510;--text:#f5f7f2;--muted:#99a89d;--accent:#d7ff3f;--accent-ink:#071008;--pos:#75d69a;--sans:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;--serif:var(--sans);color-scheme:dark}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans)}
-body{
-  padding:calc(env(safe-area-inset-top,0px) + 20px) 18px calc(env(safe-area-inset-bottom,0px) + 84px);
-  display:flex;flex-direction:column;max-width:480px;margin:0 auto;
-}
-header{display:flex;justify-content:space-between;align-items:baseline;padding:8px 4px 22px}
-h1{font-family:var(--serif);font-weight:400;font-size:34px;letter-spacing:-.01em}
-.status{font-size:12px;color:var(--muted)}
-.status i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:1px}
-
-.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px 18px 16px}
-.card .label{font-size:13px;color:var(--muted);margin-bottom:10px}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{padding:calc(env(safe-area-inset-top,0px) + 10px) 20px calc(env(safe-area-inset-bottom,0px) + 104px);display:flex;flex-direction:column;max-width:480px;margin:0 auto}
+button{font-family:var(--sans)}
+.view{display:none;flex:1;flex-direction:column}.view.on{display:flex}
+.top{display:flex;align-items:center;justify-content:space-between;padding:8px 0 20px}
+.subv .top{display:none}.inflow .tabs{display:none}
+.brand{display:flex;align-items:center;gap:9px;font:700 13px var(--sans);letter-spacing:.05em}
+.brand b{font:700 30px/1 var(--sans);color:var(--accent);letter-spacing:-.03em}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--surface);border:1px solid var(--line);color:var(--text);font:600 12px var(--sans);cursor:pointer}
+header{display:flex;align-items:center;gap:12px;padding:8px 0 18px}
+.subh{display:flex;align-items:center;gap:14px;padding:8px 0 20px}.subh .t{font:700 18px var(--sans)}
+.back{background:none;border:0;color:var(--muted);font:500 14px var(--sans);cursor:pointer;padding:0}
+.status{color:var(--muted);font:500 12px var(--sans)}
+h1{font:700 25px/1.2 var(--sans);letter-spacing:-.01em}
+.lead{color:var(--muted);font-size:12.5px;margin:5px 0 20px}
+.eyebrow,.label{font:600 10px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.eyebrow{margin:22px 0 9px}.label{margin-bottom:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:17px;padding:16px;color:var(--text)}
+.card.hi2{background:var(--raise)}.card.deep{background:var(--deep)}
 .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.amount{
-  flex:1;min-width:0;background:none;border:0;outline:0;color:var(--text);
-  font-family:var(--serif);font-size:44px;line-height:1.1;letter-spacing:-.01em;width:100%;
-}
-.amount::placeholder{color:#3A404B}
-.amount.out{color:var(--text)}
-.usd{font-size:12.5px;color:var(--muted);margin-top:8px;min-height:16px}
-
-.token{
-  display:flex;align-items:center;gap:8px;background:var(--raise);border:1px solid var(--line);
-  color:var(--text);font:500 15px var(--sans);padding:8px 12px 8px 8px;border-radius:999px;cursor:pointer;flex-shrink:0;
-}
-.token:active{transform:scale(.97)}
-.badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;
-  background:#0D0F12;border:1px solid var(--accent);color:var(--accent)}
-.chev{width:8px;height:8px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg) translateY(-2px);margin-left:2px}
-
+.amount{flex:1;min-width:0;width:100%;background:none;border:0;outline:0;color:var(--text);font:600 27px/1.2 var(--sans);letter-spacing:-.01em}
+.amount::placeholder{color:#3d4d41}.amount.sm{font-size:25px}.amount.r{text-align:right;font-size:19px}.big2{font:700 30px/1.2 var(--sans);letter-spacing:-.02em}
+.tk{font:500 12px var(--sans);color:var(--muted);flex-shrink:0}
+.coin{display:inline-grid;place-items:center;border-radius:50%;color:#fff;font-weight:700;flex-shrink:0;line-height:1}
+.coinbtn{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;color:var(--text);cursor:pointer;text-align:left;padding:0 0 14px}
+.cn{display:flex;flex-direction:column;gap:2px}.cn b{font:600 14px var(--sans)}.cn small{font:400 10.5px var(--sans);color:var(--muted)}
+.chev{margin-left:auto;color:var(--muted);font-size:13px}
+.assetrow{display:flex;align-items:center;gap:12px}.assetrow .coinbtn{padding:0;width:auto;flex:1}.assetrow .amtbox{text-align:right;width:46%}
+.note2{font-size:10.5px;color:var(--muted);margin:7px 2px 0}
+.pill{background:var(--raise);color:var(--pos);border:0;border-radius:9px;padding:8px 12px;font:600 11px var(--sans);cursor:pointer;flex-shrink:0}
+.live{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font:600 10px var(--sans);letter-spacing:.06em;color:var(--muted);margin-bottom:16px}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--pos)}.live em{margin-left:auto;font:500 10px var(--sans);color:var(--pos);font-style:normal;letter-spacing:0}
 .swap-wrap{display:flex;justify-content:center;height:0;position:relative;z-index:2}
-.swap{
-  position:absolute;top:-20px;width:40px;height:40px;border-radius:50%;
-  background:var(--bg);border:1px solid var(--line);color:var(--accent);display:grid;place-items:center;cursor:pointer;
-  transition:transform .35s cubic-bezier(.2,.8,.2,1);
-}
-.swap.turn{transform:rotate(180deg)}
-.swap svg{width:18px;height:18px}
-.gap{height:8px}
-
-.info{margin:20px 4px 0;display:flex;flex-direction:column;gap:12px}
-.info div{display:flex;justify-content:space-between;font-size:14px}
-.info span:first-child{color:var(--muted)}
-
-.spacer{flex:1;min-height:24px}
-.cta{
-  width:100%;border:0;border-radius:18px;padding:18px;font:600 16px var(--sans);
-  background:var(--accent);color:var(--accent-ink);cursor:pointer;transition:opacity .2s,transform .15s;
-}
-.cta:active{transform:scale(.985)}
-.cta:disabled{background:var(--raise);color:#5B616C;cursor:default}
-.note{text-align:center;font-size:12px;color:var(--muted);margin-top:12px}
-
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:10}
-.overlay.open{opacity:1;pointer-events:auto}
-.sheet{
-  position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:var(--surface);border:1px solid var(--line);
-  border-radius:26px 26px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom,0px) + 18px);
-  transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:11;
-}
-.sheet.open{transform:none}
-.grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 16px}
-.sheet h2{font-family:var(--serif);font-weight:400;font-size:26px;margin-bottom:8px}
-.opt{width:100%;display:flex;align-items:center;gap:14px;background:none;border:0;color:var(--text);
-  font:500 16px var(--sans);padding:14px 4px;border-bottom:1px solid var(--line);cursor:pointer;text-align:left}
-.opt:last-child{border-bottom:0}
-.opt small{display:block;color:var(--muted);font-weight:400;font-size:13px;margin-top:2px}
-.opt .price{margin-left:auto;color:var(--muted);font-size:14px;font-weight:400}
-.opt.sel .badge{background:var(--accent);color:var(--accent-ink)}
-
+.swap{position:absolute;top:-25px;width:46px;height:46px;border-radius:50%;background:var(--accent);color:var(--accent-ink);border:5px solid var(--bg);display:grid;place-items:center;cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.swap.turn{transform:rotate(180deg)}.swap svg{width:20px;height:20px}
+.gap{height:10px}.spacer{flex:1;min-height:22px}
+.disc{text-align:center;font-size:10px;color:var(--muted);margin-top:12px}
+.ic{width:32px;height:32px;border-radius:50%;background:var(--raise);color:var(--accent);display:grid;place-items:center;font-size:14px;flex-shrink:0}
+.pt{flex:1;min-width:0}.pt b{display:block;font:600 13px var(--sans)}.pt small{display:block;font:400 10px var(--sans);color:var(--muted);margin-top:2px}
+.payrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;padding:12px 14px;border-radius:14px}
+.sum{margin-top:12px;border-radius:12px;padding:6px 14px}
+.cta{width:100%;border:0;border-radius:13px;padding:15px;font:600 14px var(--sans);background:var(--accent);color:var(--accent-ink);cursor:pointer;transition:opacity .2s,transform .15s}
+.cta:active{transform:scale(.985)}.cta:disabled{background:var(--raise);color:#5f6f63;cursor:default}
+.ghost{width:100%;background:var(--raise);border:1px solid var(--line);color:var(--text);border-radius:13px;padding:14px;font:600 13px var(--sans);cursor:pointer;margin-top:10px}
+.ghost:disabled{opacity:.5}
+.field{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px;color:var(--text);font:400 14px var(--sans);outline:0;margin-top:10px}
+.field:focus{border-color:var(--accent)}
+.kv{display:flex;justify-content:space-between;gap:16px;font-size:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:0}.kv span:first-child{color:var(--muted);display:flex;align-items:center;gap:8px}.kv span:last-child{text-align:right;font-weight:500}
+.pos{color:var(--pos)!important}.ok{color:var(--pos)}.wait{color:var(--muted)}.bad{color:#e58a8a}
+.big{font:700 26px/1.2 var(--sans);letter-spacing:-.01em;margin:4px 0 8px}
+.sub{color:var(--muted);font-size:13px;line-height:1.5}
+.addr{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px;font-size:14px;word-break:break-all;margin:14px 0 8px}
+.prog{display:flex;gap:6px;margin:0 0 24px}.prog i{flex:1;height:3px;border-radius:2px;background:var(--line);transition:background .3s}.prog i.on{background:var(--accent)}
+.hi{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:8px;font-size:13px;font-weight:600}
+.hi small{display:block;color:var(--muted);font-size:11px;margin-top:3px;font-weight:400}.hi .r{text-align:right}
+.empty{margin:auto;text-align:center;color:var(--muted);font-size:13px;line-height:1.5;padding:0 30px}
+.empty b{display:block;font:700 20px var(--sans);color:var(--text);margin-bottom:6px}
+.set{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;color:var(--text);font:600 13px var(--sans);padding:11px 14px;margin-bottom:8px;cursor:pointer;text-align:left}
+.set em{font-style:normal;color:var(--muted);font-weight:400}
+.tg{width:42px;height:24px;border-radius:12px;background:var(--raise);border:1px solid var(--line);position:relative;transition:background .2s;flex-shrink:0}
+.tg::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.tg.on{background:var(--accent)}.tg.on::after{transform:translateX(18px);background:var(--accent-ink)}
+.sec{font:700 16px var(--sans);margin:26px 0 6px}
+.mini{display:flex;gap:8px;margin-top:10px}
+.mini button{flex:1;padding:10px;border-radius:11px;border:1px solid var(--line);background:var(--raise);color:var(--text);font:600 12px var(--sans);cursor:pointer}
+.mini button.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.row2{display:flex;gap:10px;align-items:center}.row2 .field{margin-top:0;flex:1}.row2 .ghost{width:auto;margin-top:0;padding:14px 18px}
+.lbl{font-size:12px;color:var(--muted);margin:16px 0 0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{background:var(--raise);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:8px 14px;font:600 12px var(--sans);cursor:pointer}
+.chip.on{border-color:var(--accent);color:var(--accent)}
+.id{display:flex;align-items:center;gap:14px}.ava{width:46px;height:46px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font:700 22px var(--sans);display:grid;place-items:center;flex-shrink:0}
+.id b{display:block;font:600 15px var(--sans)}.id small{color:var(--muted);font-size:11px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.quick button{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:11px 4px 9px;color:var(--text);font:500 10px/1.2 var(--sans);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;min-height:70px}
+.quick i{font-style:normal;color:var(--accent);font-size:19px;line-height:1.2}
+.hero{font:700 clamp(30px,9.5vw,37px)/1.12 var(--sans);letter-spacing:-.02em;margin-top:6px}
+.hl{font:600 17px var(--sans);color:var(--accent);margin-top:14px}.copy{color:var(--muted);font-size:12.5px;line-height:1.55;margin-top:10px}
+.orbit{position:relative;width:230px;height:230px;margin:30px auto 26px}
+.orbit i{position:absolute;border-radius:50%;border:1px solid var(--line);display:block}
+.o1{inset:0;background:radial-gradient(circle,#14231a 0,#0d1510 72%)}.o2{inset:32px;background:#101a13}
+.o3{inset:70px;background:var(--accent);border:0!important;display:grid!important;place-items:center;color:var(--accent-ink);font:700 42px var(--sans);font-style:normal}
+.d1{left:20px;top:46px;width:12px;height:12px;background:var(--pos);border:0!important}.d2{right:12px;top:150px;width:8px;height:8px;background:var(--accent);border:0!important}
+.ch{position:absolute;background:var(--raise);border:1px solid var(--line);border-radius:9px;padding:7px 10px;font:600 9px var(--sans);white-space:nowrap}
+.c1{left:-34px;top:28px;color:var(--pos)}.c2{right:-46px;bottom:26px;color:var(--text);font-weight:500;letter-spacing:.03em}
+.feat{display:flex;align-items:center;gap:12px;padding:14px;border-radius:15px}
+.link{background:none;border:0;color:var(--muted);font:500 12px var(--sans);margin-top:14px;cursor:pointer;text-align:center;width:100%}.link b{color:var(--text);font-weight:600}
+.foot{text-align:center;font:500 8px var(--sans);letter-spacing:.12em;color:var(--muted);margin-top:22px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s;z-index:10}.overlay.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:var(--surface);border:1px solid var(--line);border-radius:24px 24px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:11;max-height:80vh;overflow:auto}
+.sheet.open{transform:none}.grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 16px}
+.sheet h2{font:700 18px var(--sans);margin-bottom:6px}
+.opt{width:100%;display:flex;align-items:center;gap:12px;background:none;border:0;border-bottom:1px solid var(--line);color:var(--text);font:600 14px var(--sans);padding:13px 4px;cursor:pointer;text-align:left}
+.opt:last-child{border-bottom:0}.opt small{display:block;color:var(--muted);font:400 11px var(--sans);margin-top:2px}.opt .price{margin-left:auto;color:var(--muted);font:400 13px var(--sans)}.opt.sel{color:var(--accent)}
+.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 12px);width:calc(100% - 24px);max-width:456px;display:flex;gap:4px;background:var(--nav);border:1px solid var(--line);border-radius:21px;padding:8px;z-index:5}
+.tab{flex:1;background:none;border:0;border-radius:13px;color:var(--muted);font:500 10px var(--sans);display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;cursor:pointer}
+.tab svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{background:var(--raise);color:var(--text)}.tab.on svg{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-
-.view{display:none;flex:1;flex-direction:column}.view.on{display:flex}
-.tabs{position:fixed;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;display:flex;background:rgba(13,15,18,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 8px);z-index:5}
-.inflow .tabs{display:none}
-.tab{flex:1;background:none;border:0;color:var(--muted);font:500 12px var(--sans);display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;cursor:pointer}
-.tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.tab.on{color:var(--accent)}
-.back{background:none;border:0;color:var(--muted);font:500 15px var(--sans);cursor:pointer;padding:0}
-.prog{display:flex;gap:6px;margin:0 0 26px}.prog i{flex:1;height:3px;border-radius:2px;background:var(--line);transition:background .3s}.prog i.on{background:var(--accent)}
-.kv{display:flex;justify-content:space-between;gap:16px;font-size:14px;padding:11px 0;border-bottom:1px solid var(--line)}
-.kv:last-child{border-bottom:0}.kv span:first-child{color:var(--muted)}.kv span:last-child{text-align:right}
-.big{font-family:var(--serif);font-size:34px;line-height:1.15;margin:4px 0 6px}
-.sub{color:var(--muted);font-size:14px;line-height:1.5}
-.field{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;color:var(--text);font:400 15px var(--sans);outline:0;margin-top:10px}
-.field:focus{border-color:var(--accent)}
-.addr{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;font-size:15px;word-break:break-all;margin:14px 0 10px}
-.ghost{width:100%;background:var(--raise);border:1px solid var(--line);color:var(--text);border-radius:16px;padding:15px;font:500 15px var(--sans);cursor:pointer;margin-top:10px}
-.hi{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
-.hi:last-child{border-bottom:0}.hi small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px}
-.hi .r{text-align:right;font-size:14px}.ok{color:var(--accent)}.wait{color:var(--muted)}
-.empty{margin:auto;text-align:center;color:var(--muted);font-size:14px;line-height:1.5;padding:0 30px}
-.empty b{display:block;font-family:var(--serif);font-weight:400;font-size:26px;color:var(--text);margin-bottom:6px}
-.me{display:flex;align-items:center;gap:14px;margin-bottom:18px}
-.ava{width:56px;height:56px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);display:grid;place-items:center;font:400 26px var(--serif)}
-.me b{font:400 24px var(--serif);display:block}
-.set{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;border-bottom:1px solid var(--line);color:var(--text);font:400 15px var(--sans);padding:17px 0;cursor:pointer;text-align:left}
-.set:last-child{border-bottom:0}.set em{font-style:normal;color:var(--muted)}
-.tg{width:44px;height:26px;border-radius:13px;background:var(--raise);border:1px solid var(--line);position:relative;transition:background .2s}
-.tg::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
-.tg.on{background:var(--accent)}.tg.on::after{transform:translateX(18px);background:var(--accent-ink)}
-
-.sec{font:400 22px var(--serif);margin:28px 0 6px}
-.mini{display:flex;gap:8px;margin-top:10px}
-.mini button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--raise);color:var(--text);font:500 13px var(--sans);cursor:pointer}
-.mini button.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.bad{color:#C98A8A}
-.row2{display:flex;gap:10px;align-items:center}.row2 .field{margin-top:0;flex:1}.row2 .ghost{width:auto;margin-top:0;padding:15px 18px}
-.lbl{font-size:13px;color:var(--muted);margin:16px 0 0}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
-.chip{background:var(--raise);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:9px 14px;font:500 14px var(--sans);cursor:pointer}
-.chip.on{border-color:var(--accent);color:var(--accent)}
+#bCta,#cta,#goBuy{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 88px);z-index:3}
+.splashbar{display:none;height:3px;border-radius:2px;background:var(--accent);width:0;margin:0 0 18px}
+.splash #splashBar{display:block;animation:splashfill 5s linear forwards}
+@keyframes splashfill{to{width:100%}}
+@media (prefers-reduced-motion:reduce){.splash #splashBar{animation:none;width:100%}}
 </style>
 </head>
 <body>
+<div class="top" id="topbar"><div class="brand"><b>c</b>CRYPTA</div><button class="avatar" id="avatar" aria-label="Профиль">A</button></div>
 
-<main class="view on" id="v-buy">
-<header><h1>Покупка</h1><div class="status"><i></i><span id="bupd">Курс загружается</span></div></header>
-<section class="card">
-  <div class="label">Вы платите</div>
-  <div class="row"><input id="bAmt" class="amount" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Сумма в рублях"><div class="token"><span class="badge">₽</span>RUB</div></div>
-  <div class="usd" id="bLim"></div>
-</section>
-<div style="height:12px"></div>
-<section class="card">
-  <div class="label">Вы получаете</div>
-  <div class="row"><input id="bOut" class="amount out" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Сколько криптовалюты получить"><button class="token" id="bTok" aria-label="Выбрать монету"></button></div>
+<main class="view on" id="v-home">
+  <div class="splashbar" id="splashBar"></div>
+  <div class="eyebrow" style="margin:4px 0 14px">● Your assets. Your control.</div>
+  <h2 class="hero">Криптовалюта<br>без лишних<br>сложностей.</h2>
+  <p class="hl">Свобода в каждом действии.</p>
+  <p class="copy">Покупайте, обменивайте и храните активы просто, прозрачно и уверенно.</p>
+  <div class="orbit"><i class="o1"></i><i class="o2"></i><i class="o3">₿</i><i class="d1"></i><i class="d2"></i><span class="ch c1" id="chipBtc">BTC</span><span class="ch c2">USDT &nbsp;СТАБИЛЬНО</span></div>
+  <div class="card feat"><span class="ic">↗</span><div class="pt"><b>Уверенность в каждом шаге</b><small>Прозрачные курсы. Полный контроль.</small></div></div>
+  <div class="spacer"></div>
+  <button class="cta" id="goBuy">Начать ↗</button>
+  <button class="link" id="goProf">Уже с нами?  <b>Открыть профиль</b></button>
+  <div class="foot">БЕЗОПАСНОСТЬ &nbsp;•&nbsp; ДЛЯ ВАС</div>
+</main>
+
+<main class="view" id="v-buy">
+  <h1>Купить криптовалюту</h1>
+  <p class="lead">Пополните свой криптопортфель.</p>
+  <section class="card">
+    <div class="label">Доступно для покупки</div>
+    <div class="row"><div class="amount sm" id="bBal">0 ₽</div><button class="pill" id="bTop">Пополнить ↗</button></div>
   </section>
-<div class="info">
-  <div><span>Курс</span><span id="bRate">—</span></div>
-  <div><span>Оплата</span><span id="bPay">—</span></div>
-  <div><span>Время</span><span>около 15 минут</span></div>
-</div>
-<div class="spacer"></div>
-<button class="cta" id="bCta" disabled>Введите сумму</button>
+  <div class="eyebrow">Вы платите</div>
+  <section class="card"><div class="row"><input id="bAmt" class="amount" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Сумма в рублях"><span class="tk">RUB ₽</span></div></section>
+  <div class="note2" id="bLim"></div>
+  <div class="eyebrow">Получаете</div>
+  <section class="card hi2"><div class="assetrow"><button class="coinbtn" id="bTok" aria-label="Выбрать монету"></button><div class="amtbox"><input id="bOut" class="amount r" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Сколько криптовалюты получить"><span class="tk" id="bTk"></span></div></div></section>
+  <div class="eyebrow">Способ оплаты</div>
+  <button class="card payrow" id="payBtn"><span class="ic">▤</span><span class="pt"><b id="bPay"></b><small id="bPaySub"></small></span><span class="chev">›</span></button>
+  <div class="card sum">
+    <div class="kv"><span>Курс</span><span id="bRate">—</span></div>
+    <div class="kv"><span>Комиссия сервиса</span><span id="bFee">—</span></div>
+    <div class="kv"><span>Поступление</span><span class="pos">около 15 минут</span></div>
+  </div>
+  <div class="spacer"></div>
+  <button class="cta" id="bCta" disabled style="margin-top:16px">Введите сумму</button>
 </main>
 
 <main class="view" id="v-swap">
-<header>
-  <h1>Обмен</h1>
-  <div class="status"><i></i><span id="upd">Курс загружается</span></div>
-</header>
-
-<section class="card">
-  <div class="label">Отдаёте</div>
-  <div class="row">
-    <input id="amt" class="amount" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Сумма к обмену">
-    <button class="token" id="fromBtn" aria-label="Выбрать монету, которую отдаёте"></button>
+  <h1>Обмен криптовалюты</h1>
+  <p class="lead">Обменивайте активы по текущему курсу.</p>
+  <div class="live"><i></i>АКТУАЛЬНЫЙ КУРС<em id="upd">Загружается</em></div>
+  <section class="card">
+    <div class="label">Отдаёте</div>
+    <button class="coinbtn" id="fromBtn" aria-label="Выбрать монету, которую отдаёте"></button>
+    <div class="row"><input id="amt" class="amount" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Сумма к обмену"><span class="tk" id="fromTk"></span></div>
+  </section>
+  <div class="swap-wrap"><button class="swap" id="swap" aria-label="Поменять местами"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4v16M8 20l-4-4M8 20l4-4M16 20V4M16 4l-4 4M16 4l4 4"/></svg></button></div>
+  <div class="gap"></div>
+  <section class="card hi2">
+    <div class="label">Получаете</div>
+    <button class="coinbtn" id="toBtn" aria-label="Выбрать монету, которую получаете"></button>
+    <div class="row"><input id="out" class="amount" placeholder="0" readonly aria-label="Сумма к получению"><span class="tk" id="toTk"></span></div>
+  </section>
+  <div class="card sum" style="margin-top:16px">
+    <div class="kv"><span>Обменный курс</span><span id="rate">—</span></div>
+    <div class="kv"><span>Комиссия сервиса</span><span id="feeTxt">—</span></div>
+    <div class="kv"><span>Время обмена</span><span class="pos">около 5 минут</span></div>
   </div>
-  <div class="usd" id="fromUsd"></div>
-</section>
-
-<div class="swap-wrap">
-  <button class="swap" id="swap" aria-label="Поменять местами">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4v16M8 20l-4-4M8 20l4-4M16 20V4M16 4l-4 4M16 4l4 4"/></svg>
-  </button>
-</div>
-<div class="gap"></div>
-
-<section class="card">
-  <div class="label">Получаете</div>
-  <div class="row">
-    <input id="out" class="amount out" placeholder="0" readonly aria-label="Сумма к получению">
-    <button class="token" id="toBtn" aria-label="Выбрать монету, которую получаете"></button>
-  </div>
-  <div class="usd" id="toUsd"></div>
-</section>
-
-<div class="info">
-  <div><span>Курс</span><span id="rate">—</span></div>
-  <div><span>Комиссия</span><span id="feeTxt">0,5%</span></div>
-  <div><span>Время обмена</span><span>около 5 минут</span></div>
-</div>
-
-<div class="spacer"></div>
-<button class="cta" id="cta" disabled>Введите сумму</button>
-<div class="note">Демо-версия: курсы ориентировочные</div>
-</main>
-
-<main class="view" id="v-hist">
-  <header><h1>История</h1></header>
-  <div id="histBody" style="display:flex;flex-direction:column;flex:1"></div>
+  <div class="spacer"></div>
+  <button class="cta" id="cta" disabled style="margin-top:16px">Введите сумму</button>
+  <p class="disc">Итоговая сумма может немного измениться из-за курса.</p>
 </main>
 
 <main class="view" id="v-prof">
-  <header><h1>Профиль</h1></header>
+  <h1>Ваш аккаунт</h1>
+  <p class="lead">Управляйте портфелем и настройками.</p>
   <div id="profBody"></div>
 </main>
 
+<main class="view" id="v-hist">
+  <div class="subh"><button class="back" data-back="prof">‹ Назад</button><span class="t">История операций</span></div>
+  <div id="histBody" style="display:flex;flex-direction:column;flex:1"></div>
+</main>
+
+<main class="view" id="v-top">
+  <div class="subh"><button class="back" data-back="prof">‹ Назад</button><span class="t">Пополнение баланса</span></div>
+  <div class="eyebrow" style="margin-top:0">Валюта</div>
+  <div class="chips" id="topCur" style="margin-top:0"></div>
+  <div class="eyebrow">Сумма пополнения</div>
+  <section class="card"><div class="row"><input id="topAmt" class="amount" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Сумма пополнения"><span class="tk" id="topSym"></span></div></section>
+  <div class="note2" id="topHint"></div>
+  <div class="spacer"></div>
+  <button class="cta" id="topGo" disabled style="margin-top:16px">Введите сумму</button>
+</main>
+
+<main class="view" id="v-send">
+  <div class="subh"><button class="back" data-back="prof">‹ Назад</button><span class="t">Отправить</span></div>
+  <div class="eyebrow" style="margin-top:0">Монета</div>
+  <div class="chips" id="sndCur" style="margin-top:0"></div>
+  <div class="eyebrow">Сумма</div>
+  <section class="card"><div class="row"><input id="sndAmt" class="amount" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Сумма отправки"><button class="pill" id="sndMax">Макс</button></div></section>
+  <div class="note2" id="sndAv"></div>
+  <div class="eyebrow">Адрес получателя</div>
+  <input class="field" id="sndAddr" placeholder="Вставьте адрес" autocomplete="off" style="margin-top:0">
+  <div class="chips" id="sndSaved"></div>
+  <div class="spacer"></div>
+  <button class="cta" id="sndGo" disabled style="margin-top:16px">Отправить ↗</button>
+</main>
+
+<main class="view" id="v-addr">
+  <div class="subh"><button class="back" data-back="prof">‹ Назад</button><span class="t">Сохранённые адреса</span></div>
+  <div id="addrBody"></div>
+</main>
+
+<main class="view" id="v-set">
+  <div class="subh"><button class="back" data-back="prof">‹ Назад</button><span class="t">Настройки и безопасность</span></div>
+  <div id="setBody"></div>
+</main>
+
 <main class="view" id="v-flow">
-  <header><button class="back" id="flowBack">Назад</button><span class="status" id="flowTitle"></span></header>
+  <header><button class="back" id="flowBack">‹ Назад</button><span class="status" id="flowTitle"></span></header>
   <div class="prog" id="prog"><i></i><i></i><i></i></div>
   <div id="flowBody" style="display:flex;flex-direction:column;flex:1"></div>
 </main>
 
 <main class="view" id="v-admin">
-  <header><button class="back" id="admBack">Назад</button><span class="status">Админ-панель</span></header>
+  <div class="subh"><button class="back" id="admBack">‹ Назад</button><span class="t">Админ-панель</span></div>
   <div id="admBody"></div>
 </main>
 
 <nav class="tabs">
-  <button class="tab on" data-v="buy"><svg viewBox="0 0 24 24"><rect x="3.5" y="6.5" width="17" height="12" rx="3"/><path d="M3.5 10.5h17M16 14.5h1.5"/></svg>Покупка</button>
+  <button class="tab on" data-v="home"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h12v-9"/></svg>Главная</button>
+  <button class="tab" data-v="buy"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>Купить</button>
   <button class="tab" data-v="swap"><svg viewBox="0 0 24 24"><path d="M7 7h11M18 7l-3-3M18 7l-3 3M17 17H6M6 17l3-3M6 17l3 3"/></svg>Обмен</button>
-  <button class="tab" data-v="hist"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>История</button>
-  <button class="tab" data-v="prof"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.5"/><path d="M5 19.5c1-3.5 4-5 7-5s6 1.5 7 5"/></svg>Профиль</button>
+  <button class="tab" data-v="prof"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>Профиль</button>
 </nav>
 
 <div class="overlay" id="ov"></div>
-<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Выбор монеты">
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Выбор">
   <div class="grab"></div>
-  <h2>Выберите монету</h2>
+  <h2 id="sheetT">Выберите</h2>
   <div id="list"></div>
 </div>
 
@@ -237,7 +261,7 @@ h1{font-family:var(--serif);font-weight:400;font-size:34px;letter-spacing:-.01em
 const tg = window.Telegram && Telegram.WebApp;
 if (tg) {
   tg.ready(); tg.expand();
-  try { tg.setHeaderColor('#0D0F12'); tg.setBackgroundColor('#0D0F12'); } catch(e){}
+  try { tg.setHeaderColor('#080e0b'); tg.setBackgroundColor('#080e0b'); } catch(e){}
 }
 const haptic = (t='light') => { try { tg.HapticFeedback.impactOccurred(t); } catch(e){} };
 
@@ -260,25 +284,8 @@ const $ = id => document.getElementById(id);
 const fmt = (n, d) => n.toLocaleString('ru-RU', {maximumFractionDigits:d, minimumFractionDigits:0});
 const usdFmt = n => '≈ ' + n.toLocaleString('ru-RU', {maximumFractionDigits:2}) + ' $';
 
-function tokenBtn(el, sym){
-  el.innerHTML = `<span class="badge">${sym[0]}</span>${sym}<span class="chev"></span>`;
-}
 function parse(){ return parseFloat(($('amt').value || '').replace(',', '.')) || 0; }
 
-function render(){
-  tokenBtn($('fromBtn'), from); tokenBtn($('toBtn'), to);
-  const f = by(from), t = by(to), a = parse();
-  const raw = f.price / t.price;
-  const out = a * raw * (1 - FEE);
-  $('out').value = a > 0 ? fmt(out, t.dec) : '';
-  $('fromUsd').textContent = a > 0 ? usdFmt(a * f.price) : '';
-  $('toUsd').textContent = a > 0 ? usdFmt(out * t.price) : '';
-  $('rate').textContent = `1 ${from} = ${fmt(raw, t.dec)} ${to}`;
-  const cta = $('cta');
-  $('feeTxt').textContent = pct();
-  cta.disabled = !(a > 0) || paused;
-  cta.textContent = paused ? 'Обмен временно недоступен' : (a > 0 ? 'Обменять' : 'Введите сумму');
-}
 
 $('amt').addEventListener('input', e => {
   e.target.value = e.target.value.replace(/[^0-9.,]/g, '');
@@ -292,31 +299,11 @@ $('swap').addEventListener('click', () => {
   haptic(); render();
 });
 
-function openSheet(which){
-  pick = which; haptic();
-  const cur = which === 'from' ? from : which === 'buy' ? buyTok : to;
-  $('list').innerHTML = tokens.map(t => `
-    <button class="opt ${t.sym===cur?'sel':''}" data-s="${t.sym}">
-      <span class="badge">${t.sym[0]}</span>
-      <span>${t.sym}<small>${t.name}</small></span>
-      <span class="price">${which === 'buy' ? fmt(t.rub, t.rub < 100 ? 2 : 0) + ' ₽' : fmt(t.price, t.price < 10 ? 2 : 0) + ' $'}</span>
-    </button>`).join('');
-  $('ov').classList.add('open'); $('sheet').classList.add('open');
-}
 function closeSheet(){ $('ov').classList.remove('open'); $('sheet').classList.remove('open'); }
 
 $('fromBtn').onclick = () => openSheet('from');
 $('toBtn').onclick = () => openSheet('to');
 $('ov').onclick = closeSheet;
-$('list').addEventListener('click', e => {
-  const b = e.target.closest('.opt'); if (!b) return;
-  const s = b.dataset.s;
-  if (pick === 'buy') { buyTok = s; closeSheet(); haptic(); renderBuy(); return; }
-  if (pick === 'from') { if (s === to) to = from; from = s; }
-  else { if (s === from) from = to; to = s; }
-  $('amt').value = '';
-  closeSheet(); haptic(); render();
-});
 
 $('cta').addEventListener('click', () => { haptic('medium'); startFlow(); });
 
@@ -326,135 +313,10 @@ let hist = []; try { hist = JSON.parse(localStorage.getItem('hist') || '[]'); } 
 const saveHist = () => { try { localStorage.setItem('hist', JSON.stringify(hist)); } catch(e){} };
 let order = null;
 
-function show(v){
-  ['buy','swap','hist','prof','flow','admin'].forEach(x => $('v-'+x).classList.toggle('on', x === v));
-  document.body.classList.toggle('inflow', v === 'flow');
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.v === v));
-  if (v === 'hist') renderHist();
-  if (v === 'prof') renderProf();
-  if (v === 'admin') { renderAdmin(); if (SERVER) loadAdmin(); }
-  if (SERVER && (v === 'hist' || v === 'prof')) boot().then(() => { if ($('v-' + v).classList.contains('on')) { v === 'hist' ? renderHist() : renderProf(); } });
-  window.scrollTo(0, 0);
-}
-document.querySelectorAll('.tab').forEach(t => t.onclick = () => { haptic(); show(t.dataset.v); });
 
-function startFlow(){
-  order = {from, to, amt:$('amt').value, out:$('out').value, rate:$('rate').textContent,
-           id:Math.floor(100000 + Math.random()*900000), step:1, addr:''};
-  show('flow'); renderFlow();
-}
-$('flowBack').onclick = () => {
-  if (order && order.step === 2) { order.step = 1; renderFlow(); }
-  else show(order && order.type === 'buy' ? 'buy' : 'swap');
-};
 
-function renderFlow(){
-  const o = order, b = $('flowBody');
-  document.querySelectorAll('#prog i').forEach((e,i) => e.classList.toggle('on', i < o.step));
-  $('flowTitle').textContent = ['','Подтверждение','Отправка','Готово'][o.step];
-  $('flowBack').style.visibility = o.step === 3 ? 'hidden' : 'visible';
-  if (o.step === 2 && o.type === 'buy') { renderBuyPay(); return; }
 
-  if (o.step === 1) {
-    b.innerHTML = `
-      <div class="card">
-        <div class="kv"><span>Отдаёте</span><span>${esc(o.amt)} ${cs(o.from)}</span></div>
-        <div class="kv"><span>Получаете</span><span>${esc(o.out)} ${o.to}</span></div>
-        <div class="kv"><span>Курс</span><span>${esc(o.rate)}</span></div>
-        <div class="kv"><span>Комиссия</span><span>${o.type === 'buy' ? 'включена в курс' : pct()}</span></div>
-      </div>
-      ${o.type === 'buy'
-        ? `<p class="sub" style="margin-top:22px">Купленные ${o.to} появятся на балансе в профиле после подтверждения оплаты.</p>`
-        : `<p class="sub" style="margin-top:22px">Адрес кошелька для получения ${o.to}</p>
-      <input class="field" id="addrIn" placeholder="Вставьте адрес" autocomplete="off" value="${esc(o.addr)}">`}
-      <div class="spacer"></div>
-      <button class="cta" id="next" ${o.type !== 'buy' && o.addr.length < 10 ? 'disabled' : ''}>Продолжить</button>`;
-    if ($('addrIn')) $('addrIn').oninput = e => { o.addr = e.target.value.trim(); $('next').disabled = o.addr.length < 10; };
-    $('next').onclick = () => { haptic(); o.step = 2; renderFlow(); };
-  }
 
-  if (o.step === 2) {
-    o.dep = o.dep || 'demo-' + o.from.toLowerCase() + '-' + Math.random().toString(36).slice(2, 14);
-    b.innerHTML = `
-      <div class="big">Отправьте ${esc(o.amt)} ${o.from}</div>
-      <p class="sub">Переведите ровно эту сумму на адрес ниже. Заявка №${o.id}.</p>
-      <div class="addr">${o.dep}</div>
-      <button class="ghost" id="copy">Скопировать адрес</button>
-      <p class="sub" style="margin-top:18px">Демо-режим: этот адрес не принимает реальные средства, ничего не отправляйте.</p>
-      <div class="spacer"></div>
-      <button class="cta" id="sent">Я отправил</button>`;
-    $('copy').onclick = () => {
-      try { navigator.clipboard.writeText(o.dep); } catch(e){}
-      haptic(); $('copy').textContent = 'Скопировано';
-    };
-    $('sent').onclick = confirmSent;
-  }
-
-  if (o.step === 3) {
-    b.innerHTML = `
-      <div class="big">${o.done ? 'Обмен завершён' : 'Проверяем перевод'}</div>
-      <p class="sub">${o.done
-        ? `${esc(o.out)} ${o.to} отправлены на ваш кошелёк.`
-        : (o.type === 'buy' ? 'Монеты зачислятся на баланс в профиле после подтверждения оплаты.' : 'Обычно это занимает несколько минут. Статус появится в истории.')}</p>
-      <div class="card" style="margin-top:22px">
-        <div class="kv"><span>Заявка</span><span>№${o.id}</span></div>
-        <div class="kv"><span>Статус</span><span class="${o.done ? 'ok' : 'wait'}">${o.done ? 'Завершён' : 'В обработке'}</span></div>
-      </div>
-      <div class="spacer"></div>
-      <button class="ghost" id="toHist">Открыть историю</button>
-      <button class="cta" id="fin" style="margin-top:10px">Готово</button>`;
-    $('toHist').onclick = () => show('hist');
-    $('fin').onclick = () => {
-      if (o.type === 'buy') { $('bAmt').value = ''; $('bOut').value = ''; buySrc = 'rub'; renderBuy(); show('buy'); }
-      else { $('amt').value = ''; render(); show('swap'); }
-    };
-  }
-}
-
-function renderHist(){
-  const b = $('histBody');
-  if (!hist.length) {
-    b.innerHTML = '<div class="empty"><b>Обменов пока нет</b>Сделайте первый на вкладке «Обмен».</div>';
-    return;
-  }
-  b.innerHTML = hist.map(h => `
-    <div class="hi">
-      <div>${cs(h.from)} → ${cs(h.to)}<small>${new Date(h.ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} · №${h.id}</small></div>
-      <div class="r">+${esc(h.out)} ${h.to}<small class="${h.st === 'Завершён' ? 'ok' : h.st === 'Отклонён' ? 'bad' : 'wait'}">${h.st}</small></div>
-    </div>`).join('');
-}
-
-function renderProf(){
-  const u = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
-  const name = u.first_name || 'Гость';
-  const owned = tokens.filter(t => bal[t.sym] > 0);
-  const total = owned.reduce((x, t) => x + bal[t.sym] * t.rub, 0);
-  const isAdmin = SERVER ? isAdminSrv : (ADMIN_IDS.includes(u.id) || !(tg && tg.initData));
-  let notif = true; try { notif = localStorage.getItem('notif') !== '0'; } catch(e){}
-  $('profBody').innerHTML = `
-    <div class="me"><div class="ava">${esc(name[0].toUpperCase())}</div>
-      <div><b>${esc(name)}</b><span class="sub">${u.username ? '@' + esc(u.username) : 'Telegram'}</span></div></div>
-    <div class="card" style="margin-bottom:18px">
-      <div class="label">Баланс</div>
-      <div class="big" style="margin:0 0 6px">${fmt(total, 2)} ₽</div>
-      ${owned.length ? owned.map(t => `<div class="kv"><span>${t.sym}</span><span>${fmt(bal[t.sym], t.dec)}</span></div>`).join('') : '<p class="sub">Купленная криптовалюта появится здесь.</p>'}
-    </div>
-    <div class="card" style="margin-bottom:18px">
-      <div class="kv"><span>Обменов</span><span>${hist.length}</span></div>
-    </div>
-    <button class="set" id="nt">Уведомления<span class="tg ${notif ? 'on' : ''}"></span></button>
-    ${SERVER ? '' : `<button class="set" id="clr">Очистить историю<em>${hist.length}</em></button>`}
-    ${isAdmin ? `<button class="set" id="adm">Админ-панель<em>${SERVER || ADMIN_IDS.includes(u.id) ? '' : 'Демо'}</em></button>` : ''}
-    <button class="set" id="about">О сервисе<em>Статус</em></button>
-    ${SERVER ? '' : '<p class="sub" style="margin-top:14px">Сервер не подключён: данные сохраняются только на этом устройстве.</p>'}`;
-  $('nt').onclick = () => {
-    notif = !notif; try { localStorage.setItem('notif', notif ? '1' : '0'); } catch(e){}
-    haptic(); renderProf();
-  };
-  if ($('clr')) $('clr').onclick = () => { hist = []; saveHist(); haptic(); renderProf(); };
-  if ($('adm')) $('adm').onclick = () => { haptic(); show('admin'); };
-  $('about').onclick = () => { const m = 'Статус сервера: ' + (SERVER ? (srvErr ? 'ошибка, ' + srvErr : 'подключён') : 'не подключён, не найден settings.js') + '.'; try { tg.showAlert(m); } catch(e){ alert(m); } };
-}
 
 function renderAdmin(){
   const H0 = SERVER ? allOrders : hist;
@@ -473,6 +335,8 @@ function renderAdmin(){
     <button class="set" id="bz">${req.on ? 'Покупка включена' : 'Покупка выключена'}<span class="tg ${req.on ? 'on' : ''}"></span></button>
     <button class="set" id="rTog">Реквизиты<em>${reqOpen ? 'Свернуть' : reqSum}</em></button>
     ${reqOpen ? reqHtml() : ''}
+    <button class="set" id="dTog">Адреса для пополнения<em>${depOpen ? 'Свернуть' : tokens.filter(t => req.dep[t.sym]).length + ' из 5'}</em></button>
+    ${depOpen ? depHtml() : ''}
 
     <div class="sec">Комиссия обмена</div>
     <div class="row2">
@@ -506,16 +370,18 @@ function renderAdmin(){
     ${H.length ? H.map(h => `
       <div class="hi" style="display:block">
         <div style="display:flex;justify-content:space-between">
-          <div>${cs(h.from)} → ${cs(h.to)}<small>№${h.id} · ${new Date(h.ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${h.un ? ' · ' + esc(h.un) : ''}</small></div>
+          <div>${ttl(h)}<small>№${h.id} · ${new Date(h.ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${h.un ? ' · ' + esc(h.un) : ''}</small></div>
           <div class="r">${esc(h.amt)} ${cs(h.from)}<small class="${h.st === 'Завершён' ? 'ok' : h.st === 'Отклонён' ? 'bad' : 'wait'}">${h.st}</small></div>
         </div>
         ${h.addr ? `<p class="sub" style="word-break:break-all;margin-top:8px">Кошелёк клиента: ${esc(h.addr)}</p>` : ''}
         ${h.pay ? `<p class="sub" style="margin-top:8px">Оплата на: ${esc(h.pay)}</p>` : ''}
-        ${h.st === 'В обработке' ? `<div class="mini"><button data-id="${h.id}" data-key="${h.key || ''}" data-st="Отклонён">Отклонить</button><button class="pri" data-id="${h.id}" data-key="${h.key || ''}" data-st="Завершён">${h.type === 'buy' ? 'Зачислить на баланс' : 'Завершить'}</button></div>` : ''}
+        ${h.st === 'В обработке' ? `<div class="mini"><button data-id="${h.id}" data-key="${h.key || ''}" data-st="Отклонён">Отклонить</button><button class="pri" data-id="${h.id}" data-key="${h.key || ''}" data-st="Завершён">${(h.type === 'topup' || (h.type === 'buy' && !h.fb)) ? 'Зачислить на баланс' : h.type === 'withdraw' ? 'Отправлено' : h.fb ? 'Выполнить' : 'Завершить'}</button></div>` : ''}
       </div>`).join('') : '<p class="sub">Заявок пока нет. Создайте тестовую на вкладке «Обмен».</p>'}
     ${SERVER ? '' : '<p class="sub" style="margin-top:20px">Сервер не подключён: данные хранятся только на этом устройстве.</p>'}`;
   $('bz').onclick = () => { req.on = !req.on; saveReq(); haptic(); renderBuy(); renderAdmin(); };
   $('rTog').onclick = () => { reqOpen = !reqOpen; haptic(); renderAdmin(); };
+  $('dTog').onclick = () => { depOpen = !depOpen; haptic(); renderAdmin(); };
+  if ($('dSave')) $('dSave').onclick = () => { tokens.forEach(t => { req.dep[t.sym] = $('d_' + t.sym).value.trim(); }); saveReq(); depOpen = false; haptic('medium'); renderAdmin(); msg('Адреса сохранены'); };
   $('admBody').querySelectorAll('[data-ri]').forEach(b => b.onclick = () => { const i = +b.dataset.ri; editIdx = editIdx === i ? null : i; haptic(); renderAdmin(); });
   if ($('rAdd')) $('rAdd').onclick = () => { editIdx = 'new'; haptic(); renderAdmin(); };
   if ($('rLim')) $('rLim').onclick = () => {
@@ -565,7 +431,7 @@ function renderAdmin(){
     }
     const h = hist.find(x => String(x.id) === b.dataset.id); if (!h) return;
     h.st = b.dataset.st;
-    if (h.st === 'Завершён' && h.type === 'buy' && !h.credited) {
+    if (h.st === 'Завершён' && (h.type === 'buy' || h.type === 'topup') && !h.credited) {
       const v = parseFloat(String(h.out).replace(',', '.')) || 0;
       bal[h.to] = +((bal[h.to] || 0) + v).toFixed(8); h.credited = true; saveBal();
     }
@@ -589,70 +455,11 @@ let reqOpen = false;
 const plain = (n, d) => String(parseFloat(n.toFixed(d))).replace('.', ',');
 const cs = c => c === 'RUB' ? '₽' : c;
 
-function renderBuy(){
-  const t = by(buyTok), r = bRate();
-  const num = id => parseFloat(($(id).value || '').replace(',', '.')) || 0;
-  let a, out;
-  if (buySrc === 'out') { out = num('bOut'); a = out * r; $('bAmt').value = out > 0 ? plain(a, 2) : ''; }
-  else { a = num('bAmt'); out = a > 0 ? a / r : 0; $('bOut').value = a > 0 ? plain(out, t.dec) : ''; }
-  tokenBtn($('bTok'), buyTok);
-  $('bRate').textContent = `1 ${buyTok} = ${fmt(r, r < 100 ? 2 : 0)} ₽`;
-  const pl = req.list.filter(x => x.num);
-  $('bPay').textContent = pl.length > 1 ? 'Несколько банков' : (pl[0] && pl[0].bank) || 'Банковский перевод';
-  $('bLim').textContent = `От ${fmt(req.min, 0)} до ${fmt(req.max, 0)} ₽`;
-  const c = $('bCta');
-  c.disabled = !(a > 0) || a < req.min || a > req.max || !req.on;
-  c.textContent = !req.on ? 'Покупка временно недоступна' : a <= 0 ? 'Введите сумму'
-    : a < req.min ? `Минимум ${fmt(req.min, 0)} ₽` : a > req.max ? `Максимум ${fmt(req.max, 0)} ₽` : 'Купить';
-}
 $('bAmt').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9.,]/g, ''); buySrc = 'rub'; renderBuy(); });
 $('bOut').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9.,]/g, ''); buySrc = 'out'; renderBuy(); });
 $('bTok').onclick = () => openSheet('buy');
-$('bCta').onclick = () => {
-  haptic('medium');
-  order = {type:'buy', from:'RUB', to:buyTok, amt:$('bAmt').value, out:$('bOut').value, rate:$('bRate').textContent,
-           id:Math.floor(100000 + Math.random()*900000), step:1, addr:''};
-  show('flow'); renderFlow();
-};
 
-async function confirmSent(){
-  const o = order; haptic('medium');
-  const btn = $('sent'); if (btn) btn.disabled = true;
-  if (SERVER) {
-    try {
-      const r = await api('order.create', {order:{id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr, pay:o.pay || ''}});
-      hist.unshift(r.order);
-    } catch(e){ if (btn) btn.disabled = false; msg('Не удалось отправить заявку: ' + e.message); return; }
-  } else {
-    hist.unshift({id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr, pay:o.pay || '', ts:Date.now(), st:'В обработке'});
-    saveHist();
-  }
-  o.step = 3; o.done = false; renderFlow();
-}
 
-function renderBuyPay(){
-  const o = order, list = req.list.filter(x => x.num);
-  const i = Math.min(o.ri || 0, Math.max(list.length - 1, 0)), r = list[i] || null;
-  o.pay = r ? [r.bank, r.num].filter(Boolean).join(' · ') : '';
-  const sum = fmt(parseFloat(o.amt.replace(',', '.')) || 0, 2);
-  $('flowBody').innerHTML = `
-    <div class="big">Переведите ${sum} ₽</div>
-    <p class="sub">Заявка №${o.id}. Переведите точную сумму по реквизитам ниже.</p>
-    ${list.length > 1 ? `<div class="chips">${list.map((x, k) => `<button class="chip ${k === i ? 'on' : ''}" data-k="${k}">${esc(x.bank || 'Реквизит ' + (k + 1))}</button>`).join('')}</div>` : ''}
-    <div class="card" style="margin-top:18px">
-      <div class="kv"><span>Банк</span><span>${esc(r ? r.bank || '—' : '—')}</span></div>
-      <div class="kv"><span>Номер</span><span>${esc(r ? r.num : 'не указан')}</span></div>
-      <div class="kv"><span>Получатель</span><span>${esc(r ? r.name || '—' : '—')}</span></div>
-    </div>
-    <button class="ghost" id="copy" ${r ? '' : 'disabled'}>Скопировать номер</button>
-    ${r && r.note ? `<p class="sub" style="margin-top:16px">${esc(r.note)}</p>` : ''}
-    ${r ? '' : '<p class="sub" style="margin-top:16px">Реквизиты ещё не заданы. Попробуйте позже.</p>'}
-    <div class="spacer"></div>
-    <button class="cta" id="sent" ${r ? '' : 'disabled'}>Я оплатил</button>`;
-  document.querySelectorAll('#flowBody .chip').forEach(c => c.onclick = () => { o.ri = +c.dataset.k; haptic(); renderBuyPay(); });
-  if (r) $('copy').onclick = () => { try { navigator.clipboard.writeText(r.num); } catch(e){} haptic(); $('copy').textContent = 'Скопировано'; };
-  $('sent').onclick = confirmSent;
-}
 
 async function loadConfig(){
   try {
@@ -678,6 +485,7 @@ function fixReq(){
   if ((req.num || req.bank) && !req.list.length) req.list.push({bank:req.bank || '', num:req.num || '', name:req.name || '', note:req.note || ''});
   ['bank','num','name','note'].forEach(k => delete req[k]);
   req.list = req.list.slice(0, 5);
+  if (!req.dep || typeof req.dep !== 'object') req.dep = {};
 }
 
 function reqHtml(){
@@ -713,18 +521,19 @@ async function api(action, data){
 async function boot(){
   try {
     const r = await api('boot');
-    isAdminSrv = !!r.isAdmin;
+    isAdminSrv = !!r.isAdmin; srvErr = '';
     if (r.config) {
       if (typeof r.config.fee === 'number') FEE = r.config.fee;
       paused = !!r.config.paused;
       req = {...req, ...r.config.req}; fixReq();
     } else if (isAdminSrv) pushConfig();
     bal = r.balances || {};
+    if (Array.isArray(r.addrs)) addrs = r.addrs;
     const srv = r.orders || [];
     const fresh = hist.filter(h => h.key && Date.now() - h.ts < 120000 && !srv.some(o => o.key === h.key));
     hist = [...fresh, ...srv];
-  } catch(e){ srvErr = e.message; $('upd').textContent = $('bupd').textContent = 'нет связи с сервером'; }
-  render(); renderBuy();
+  } catch(e){ srvErr = e.message; setUpd('Нет связи с сервером'); }
+  render(); renderBuy(); refreshView();
 }
 
 async function pushConfig(){
@@ -744,16 +553,397 @@ const saveBal = () => { try { localStorage.setItem('bal', JSON.stringify(bal)); 
 async function loadRates(){
   try {
     const ids = tokens.map(t => t.cg).join(',');
-    const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,rub`);
+    const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,rub&include_24hr_change=true`);
     const d = await r.json();
-    tokens.forEach(t => { if (d[t.cg] && d[t.cg].usd) t.price = d[t.cg].usd; if (d[t.cg] && d[t.cg].rub) t.rub = d[t.cg].rub; });
-    $('upd').textContent = $('bupd').textContent = 'Курс обновлён';
+    tokens.forEach(t => { if (d[t.cg] && d[t.cg].usd) t.price = d[t.cg].usd; if (d[t.cg] && d[t.cg].rub) t.rub = d[t.cg].rub; if (d[t.cg] && typeof d[t.cg].usd_24h_change === 'number') t.chg = d[t.cg].usd_24h_change; });
+    ratesAt = Date.now(); setUpd(); setChips();
   } catch(e) {
-    $('upd').textContent = $('bupd').textContent = 'Курс ориентировочный';
+    setUpd('Курс ориентировочный');
   }
   render(); renderBuy();
 }
+/* ======================= дизайн CRYPTA ======================= */
+const NAMES = {BTC:'Биткоин', ETH:'Эфириум', USDT:'Тезер', TON:'Тонкоин', SOL:'Солана'};
+const COL = {BTC:'#f7931a', ETH:'#627eea', USDT:'#26a17b', TON:'#0098ea', SOL:'#9945ff'};
+const GLY = {BTC:'₿', ETH:'Ξ', USDT:'₮', TON:'T', SOL:'◎'};
+const nm = c => c === 'RUB' ? 'Рубль' : NAMES[c];
+const decOf = c => c === 'RUB' ? 2 : by(c).dec;
+const coin = (c, px = 38) => `<span class="coin" style="width:${px}px;height:${px}px;font-size:${Math.round(px * .5)}px;${c === 'RUB' ? 'background:var(--accent);color:var(--accent-ink)' : 'background:' + COL[c]}">${c === 'RUB' ? '₽' : GLY[c]}</span>`;
+const coinBtn = (el, c, sub) => { el.innerHTML = `${coin(c)}<span class="cn"><b>${nm(c)}</b><small>${sub}</small></span><span class="chev">▾</span>`; };
+let splashTimer = 0, ratesAt = 0, payIdx = 0, topCur = 'RUB', sndCur = null, sheetCb = null, curView = 'home', addrOpen = false, addrCoin = 'BTC', depOpen = false;
+let addrs = []; try { addrs = JSON.parse(localStorage.getItem('addrs') || '[]'); } catch(e){}
+const usable = () => req.list.filter(x => x.num);
+const holdings = () => ['RUB', ...tokens.map(t => t.sym)].filter(c => (bal[c] || 0) > 0);
+const totalRub = () => (bal.RUB || 0) + tokens.reduce((x, t) => x + (bal[t.sym] || 0) * t.rub, 0);
+const ttl = h => h.type === 'topup' ? 'Пополнение ' + cs(h.to) : h.type === 'withdraw' ? 'Отправка ' + h.from : cs(h.from) + ' → ' + cs(h.to) + (h.fb ? ' · с баланса' : '');
+const meUser = () => (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {};
+const isAdminNow = () => SERVER ? isAdminSrv : (ADMIN_IDS.includes(meUser().id) || !(tg && tg.initData));
+const newId = () => Math.floor(100000 + Math.random() * 900000);
+const numOf = id => parseFloat(($(id).value || '').replace(',', '.')) || 0;
+const clean = e => { e.target.value = e.target.value.replace(/[^0-9.,]/g, ''); };
+
+function setUpd(txt){
+  const e = $('upd'); if (!e) return;
+  e.textContent = txt || (!ratesAt ? 'Загружается' : Date.now() - ratesAt < 60000 ? 'Только что обновлено' : 'Обновлено ' + Math.round((Date.now() - ratesAt) / 60000) + ' мин назад');
+}
+function setChips(){
+  const t = by('BTC'), e = $('chipBtc'); if (!e) return;
+  e.textContent = 'BTC' + (typeof t.chg === 'number' ? '  ' + (t.chg > 0 ? '+' : '') + t.chg.toFixed(1).replace('.', ',') + '%' : '');
+  e.style.color = t.chg < 0 ? '#e58a8a' : 'var(--pos)';
+}
+function initUI(){ $('avatar').textContent = (meUser().first_name || 'Г')[0].toUpperCase(); }
+
+/* ---- навигация ---- */
+const MAIN = ['home', 'buy', 'swap', 'prof'];
+const TABOF = {hist:'prof', top:'prof', send:'prof', addr:'prof', set:'prof', admin:'prof'};
+function show(v){
+  clearTimeout(splashTimer); document.body.classList.remove('splash');
+  if (v !== 'home') { try { localStorage.setItem('seen', '1'); } catch(e){} }
+  curView = v;
+  ['home','buy','swap','prof','hist','top','send','addr','set','flow','admin'].forEach(x => $('v-' + x).classList.toggle('on', x === v));
+  document.body.classList.toggle('inflow', v === 'flow');
+  document.body.classList.toggle('subv', !MAIN.includes(v));
+  const tab = TABOF[v] || v;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.v === tab));
+  if (v === 'buy') renderBuy();
+  if (v === 'swap') render();
+  if (v === 'hist') renderHist();
+  if (v === 'prof') renderProf();
+  if (v === 'top') renderTop();
+  if (v === 'send') renderSend();
+  if (v === 'addr') renderAddr();
+  if (v === 'set') renderSet();
+  if (v === 'admin') { renderAdmin(); if (SERVER) loadAdmin(); }
+  if (SERVER && ['buy','swap','hist','prof','top','send'].includes(v)) boot();
+  window.scrollTo(0, 0);
+}
+function refreshView(){
+  if (curView === 'hist') renderHist();
+  else if (curView === 'prof') renderProf();
+  else if (curView === 'top') renderTop();
+  else if (curView === 'send') renderSend();
+  else if (curView === 'set') renderSet();
+  else if (curView === 'addr' && !addrOpen) renderAddr();
+}
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => { haptic(); show(t.dataset.v); });
+document.querySelectorAll('[data-back]').forEach(b => b.onclick = () => { haptic(); show(b.dataset.back); });
+$('avatar').onclick = () => { haptic(); show('prof'); };
+$('goBuy').onclick = () => { haptic('medium'); show('buy'); };
+$('goProf').onclick = () => { haptic(); show('prof'); };
+
+/* ---- выбор из списка ---- */
+function openSheetHtml(title, html, cb){
+  $('sheetT').textContent = title; $('list').innerHTML = html; sheetCb = cb;
+  $('ov').classList.add('open'); $('sheet').classList.add('open');
+}
+$('list').addEventListener('click', e => { const b = e.target.closest('.opt'); if (b && sheetCb) sheetCb(b.dataset.s); });
+function openSheet(which){
+  haptic();
+  if (which === 'pay') {
+    const list = usable(), rb = bal.RUB || 0;
+    const rows = list.map((x, i) => `<button class="opt ${payIdx === i ? 'sel' : ''}" data-s="${i}"><span class="ic">▤</span><span>${esc(x.bank || 'Банк ' + (i + 1))}<small>•••• ${esc((x.num.replace(/\D/g, '') || '').slice(-4) || '—')}</small></span></button>`).join('');
+    const balRow = rb > 0 ? `<button class="opt ${payIdx === 'bal' ? 'sel' : ''}" data-s="bal"><span class="ic">₽</span><span>Баланс в рублях<small>Доступно ${fmt(rb, 2)} ₽</small></span></button>` : '';
+    return openSheetHtml('Способ оплаты', (rows || '<p class="sub">Реквизиты ещё не заданы.</p>') + balRow, s => { payIdx = s === 'bal' ? 'bal' : +s; closeSheet(); haptic(); renderBuy(); });
+  }
+  const cur = which === 'from' ? from : which === 'buy' ? buyTok : to;
+  openSheetHtml('Выберите монету', tokens.map(t => `<button class="opt ${t.sym === cur ? 'sel' : ''}" data-s="${t.sym}">${coin(t.sym, 32)}<span>${nm(t.sym)}<small>${t.sym}</small></span><span class="price">${which === 'buy' ? fmt(t.rub, t.rub < 100 ? 2 : 0) + ' ₽' : fmt(t.price, t.price < 10 ? 2 : 0) + ' $'}</span></button>`).join(''), s => {
+    if (which === 'buy') buyTok = s;
+    else if (which === 'from') { if (s === to) to = from; from = s; $('amt').value = ''; }
+    else { if (s === from) from = to; to = s; $('amt').value = ''; }
+    closeSheet(); haptic(); which === 'buy' ? renderBuy() : render();
+  });
+}
+function openMore(){
+  const rows = [['top','＋','Пополнить баланс'], ['hist','◷','История операций'], ['addr','◇','Сохранённые адреса'], ['set','⚙','Настройки']];
+  if (isAdminNow()) rows.push(['admin','★','Админ-панель']);
+  openSheetHtml('Ещё', rows.map(([k, ic, t]) => `<button class="opt" data-s="${k}"><span class="ic">${ic}</span><span>${t}</span></button>`).join(''), s => { closeSheet(); show(s); });
+}
+
+/* ---- обмен ---- */
+function render(){
+  const f = by(from), t = by(to), a = parse();
+  const raw = f.price / t.price, out = a * raw * (1 - FEE), have = bal[from] || 0;
+  coinBtn($('fromBtn'), from, from + (have > 0 ? ' · Доступно ' + fmt(have, f.dec) : ''));
+  coinBtn($('toBtn'), to, `${to} · ${nm(to)}`);
+  $('fromTk').textContent = from; $('toTk').textContent = to;
+  $('out').value = a > 0 ? fmt(out, t.dec) : '';
+  $('rate').textContent = `1 ${from} = ${fmt(raw, t.dec)} ${to}`;
+  $('feeTxt').textContent = a > 0 ? `${pct()} · ~${fmt(a * raw * FEE, t.dec)} ${to}` : pct();
+  const cta = $('cta'), fb = SERVER && a > 0 && have >= a;
+  cta.disabled = !(a > 0) || paused;
+  cta.textContent = paused ? 'Обмен временно недоступен' : a > 0 ? (fb ? 'Обменять с баланса ↗' : 'Проверить обмен ↗') : 'Введите сумму';
+}
+function startFlow(){
+  const a = parse(), f = by(from), t = by(to);
+  const out = a * (f.price / t.price) * (1 - FEE);
+  order = {type:'swap', fb:SERVER && a > 0 && (bal[from] || 0) >= a ? 1 : 0, from, to, amt:plain(a, 8), out:plain(out, t.dec),
+           rate:$('rate').textContent, id:newId(), step:1, addr:''};
+  show('flow'); renderFlow();
+}
+
+/* ---- покупка за рубли ---- */
+function renderBuy(){
+  const t = by(buyTok), r = bRate(), list = usable(), rb = bal.RUB || 0;
+  let a, out;
+  if (buySrc === 'out') { out = numOf('bOut'); a = out * r; $('bAmt').value = out > 0 ? plain(a, 2) : ''; }
+  else { a = numOf('bAmt'); out = a > 0 ? a / r : 0; $('bOut').value = a > 0 ? plain(out, t.dec) : ''; }
+  if (payIdx === 'bal' && !(rb > 0)) payIdx = 0;
+  if (payIdx !== 'bal' && payIdx >= list.length) payIdx = 0;
+  const fb = payIdx === 'bal', over = fb && a > rb;
+  $('bBal').textContent = fmt(rb, 2) + ' ₽';
+  coinBtn($('bTok'), buyTok, buyTok); $('bTk').textContent = buyTok;
+  $('bPay').textContent = fb ? 'Баланс в рублях' : (list[payIdx] && list[payIdx].bank) || 'Банковский перевод';
+  $('bPaySub').textContent = fb ? `Доступно ${fmt(rb, 2)} ₽` : list[payIdx] ? 'Комиссия включена в курс' : 'Реквизиты ещё не заданы';
+  $('bLim').textContent = `Минимальная сумма — ${fmt(req.min, 0)} ₽`;
+  $('bRate').textContent = `1 ${buyTok} = ${fmt(r, r < 100 ? 2 : 0)} ₽`;
+  $('bFee').textContent = `${req.markup.toLocaleString('ru-RU')}% · ~${fmt(a > 0 ? a * req.markup / (100 + req.markup) : 0, 2)} ₽`;
+  const c = $('bCta');
+  c.disabled = !(a > 0) || a < req.min || a > req.max || !req.on || over;
+  c.textContent = !req.on ? 'Покупка временно недоступна' : a <= 0 ? 'Введите сумму' : a < req.min ? `Минимум ${fmt(req.min, 0)} ₽`
+    : a > req.max ? `Максимум ${fmt(req.max, 0)} ₽` : over ? 'Недостаточно средств на балансе' : (fb ? 'Купить с баланса ↗' : 'Проверить покупку ↗');
+}
+$('payBtn').onclick = () => openSheet('pay');
+$('bTop').onclick = () => { haptic(); show('top'); };
+$('bCta').onclick = () => {
+  haptic('medium');
+  order = {type:'buy', fb:payIdx === 'bal' ? 1 : 0, from:'RUB', to:buyTok, amt:$('bAmt').value, out:$('bOut').value, rate:$('bRate').textContent,
+           id:newId(), step:1, addr:'', ri:payIdx === 'bal' ? 0 : payIdx};
+  show('flow'); renderFlow();
+};
+
+/* ---- пополнение ---- */
+function renderTop(){
+  const cur = ['RUB', ...tokens.map(t => t.sym)], a = numOf('topAmt');
+  $('topCur').innerHTML = cur.map(c => `<button class="chip ${c === topCur ? 'on' : ''}" data-c="${c}">${cs(c)}</button>`).join('');
+  document.querySelectorAll('#topCur .chip').forEach(b => b.onclick = () => { topCur = b.dataset.c; $('topAmt').value = ''; haptic(); renderTop(); });
+  $('topSym').textContent = cs(topCur);
+  $('topHint').textContent = topCur === 'RUB' ? `Минимум ${fmt(req.min, 0)} ₽. На баланс зачислится ровно эта сумма.` : 'На баланс зачислится ровно та сумма, которую вы отправите.';
+  const bad = topCur === 'RUB' && a > 0 && (a < req.min || a > req.max), go = $('topGo');
+  go.disabled = !(a > 0) || bad;
+  go.textContent = a <= 0 ? 'Введите сумму' : bad ? (a < req.min ? `Минимум ${fmt(req.min, 0)} ₽` : `Максимум ${fmt(req.max, 0)} ₽`) : 'Продолжить ↗';
+}
+$('topAmt').addEventListener('input', e => { clean(e); renderTop(); });
+$('topGo').onclick = () => {
+  haptic('medium');
+  const v = plain(numOf('topAmt'), 8);
+  order = {type:'topup', from:topCur, to:topCur, amt:v, out:v, id:newId(), step:2, addr:'', ri:0};
+  show('flow'); renderFlow();
+};
+
+/* ---- отправка (вывод) ---- */
+function renderSend(){
+  const have = tokens.map(t => t.sym).filter(c => (bal[c] || 0) > 0);
+  if (!sndCur || !have.includes(sndCur)) sndCur = have[0] || null;
+  $('sndCur').innerHTML = have.length ? have.map(c => `<button class="chip ${c === sndCur ? 'on' : ''}" data-c="${c}">${c}</button>`).join('') : '<p class="sub">На балансе нет криптовалюты. Пополните баланс или купите монеты.</p>';
+  document.querySelectorAll('#sndCur .chip').forEach(b => b.onclick = () => { sndCur = b.dataset.c; $('sndAmt').value = ''; haptic(); renderSend(); });
+  const a = numOf('sndAmt'), mx = sndCur ? bal[sndCur] || 0 : 0, addr = $('sndAddr').value.trim();
+  $('sndAv').textContent = sndCur ? `Доступно ${fmt(mx, decOf(sndCur))} ${sndCur}` : '';
+  const sv = addrs.filter(x => x.coin === sndCur);
+  $('sndSaved').innerHTML = sv.map((x, i) => `<button class="chip" data-i="${i}">${esc(x.label)}</button>`).join('');
+  document.querySelectorAll('#sndSaved .chip').forEach(b => b.onclick = () => { $('sndAddr').value = sv[+b.dataset.i].addr; haptic(); renderSend(); });
+  const go = $('sndGo');
+  go.disabled = !(sndCur && a > 0 && a <= mx && addr.length >= 10);
+  go.textContent = !sndCur ? 'Нет средств' : a <= 0 ? 'Введите сумму' : a > mx ? 'Недостаточно средств' : addr.length < 10 ? 'Укажите адрес' : 'Проверить отправку ↗';
+}
+$('sndAmt').addEventListener('input', e => { clean(e); renderSend(); });
+$('sndAddr').addEventListener('input', renderSend);
+$('sndMax').onclick = () => { if (sndCur) { $('sndAmt').value = plain(bal[sndCur] || 0, decOf(sndCur)); haptic(); renderSend(); } };
+$('sndGo').onclick = () => {
+  if (!SERVER) { msg('Отправка доступна после подключения сервера'); return; }
+  haptic('medium');
+  const v = plain(numOf('sndAmt'), 8);
+  order = {type:'withdraw', from:sndCur, to:sndCur, amt:v, out:v, addr:$('sndAddr').value.trim(), id:newId(), step:1};
+  show('flow'); renderFlow();
+};
+
+/* ---- сохранённые адреса ---- */
+function saveAddrs(){
+  try { localStorage.setItem('addrs', JSON.stringify(addrs)); } catch(e){}
+  if (SERVER) api('addr.save', {list:addrs}).catch(e => msg('Не сохранилось на сервере: ' + e.message));
+}
+function renderAddr(){
+  const form = `<div class="lbl">Монета</div><div class="chips" style="margin-top:8px">${tokens.map(t => `<button class="chip ${t.sym === addrCoin ? 'on' : ''}" data-c="${t.sym}">${t.sym}</button>`).join('')}</div>
+    <div class="lbl">Название</div><input class="field" id="aLbl" placeholder="Например, мой кошелёк" maxlength="30" style="margin-top:6px">
+    <div class="lbl">Адрес</div><input class="field" id="aAdr" placeholder="Вставьте адрес" maxlength="120" style="margin-top:6px">
+    <button class="cta" id="aSave" style="margin-top:16px">Сохранить</button>`;
+  $('addrBody').innerHTML = (addrs.length ? addrs.map((x, i) => `<div class="card" style="margin-bottom:8px"><div class="row"><div style="display:flex;align-items:center;gap:10px">${coin(x.coin, 28)}<b style="font-size:13px">${esc(x.label)}</b></div><button class="pill" data-d="${i}">Удалить</button></div><div class="addr" style="margin:10px 0 0;font-size:12px">${esc(x.addr)}</div></div>`).join('') : '<p class="sub">Сохранённых адресов пока нет.</p>')
+    + (addrOpen ? form : addrs.length < 20 ? '<button class="ghost" id="aAdd">Добавить адрес</button>' : '');
+  if ($('aAdd')) $('aAdd').onclick = () => { addrOpen = true; haptic(); renderAddr(); };
+  document.querySelectorAll('#addrBody [data-d]').forEach(b => b.onclick = () => {
+    const go = () => { addrs.splice(+b.dataset.d, 1); saveAddrs(); haptic('medium'); renderAddr(); };
+    try { tg.showConfirm('Удалить адрес?', ok => ok && go()); } catch(e){ if (confirm('Удалить адрес?')) go(); }
+  });
+  document.querySelectorAll('#addrBody .chip').forEach(b => b.onclick = () => {
+    const l = $('aLbl').value, a = $('aAdr').value; addrCoin = b.dataset.c; haptic(); renderAddr(); $('aLbl').value = l; $('aAdr').value = a;
+  });
+  if ($('aSave')) $('aSave').onclick = () => {
+    const label = $('aLbl').value.trim(), addr = $('aAdr').value.trim();
+    if (!label || addr.length < 10) { msg('Укажите название и адрес'); return; }
+    addrs.push({id:Date.now(), label, coin:addrCoin, addr}); saveAddrs(); addrOpen = false; haptic('medium'); renderAddr();
+  };
+}
+
+/* ---- настройки ---- */
+function renderSet(){
+  const u = meUser();
+  $('setBody').innerHTML = `<div class="card">
+    <div class="kv"><span>Ваш Telegram ID</span><span>${u.id || '—'}</span></div>
+    <div class="kv"><span>Сервер</span><span class="${SERVER && !srvErr ? 'pos' : 'wait'}">${SERVER ? (srvErr ? 'ошибка' : 'подключён') : 'не подключён'}</span></div>
+    <div class="kv"><span>Комиссия обмена</span><span>${pct()}</span></div></div>
+    ${srvErr ? `<p class="sub" style="margin-top:12px">${esc(srvErr)}</p>` : ''}
+    <p class="sub" style="margin-top:18px">Операции и баланс привязаны к вашему Telegram-аккаунту. Перед каждой отправкой внимательно проверяйте адрес и сеть.</p>`;
+}
+
+/* ---- профиль ---- */
+function renderProf(){
+  const u = meUser(), name = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Гость';
+  const rows = holdings(), adm = isAdminNow();
+  const row = (k, ic, t, s) => `<button class="set" data-go="${k}"><span class="ic">${ic}</span><span class="pt"><b>${t}</b><small>${s}</small></span><span class="chev">›</span></button>`;
+  $('profBody').innerHTML = `
+    <section class="card id"><span class="ava">${esc(name[0].toUpperCase())}</span><div><b>${esc(name)}</b><small>${u.username ? '@' + esc(u.username) : 'Telegram'}</small></div></section>
+    <section class="card deep" style="margin-top:14px">
+      <div class="label">Общая стоимость портфеля</div>
+      <div class="big2">${fmt(totalRub(), 2)} ₽</div>
+      ${rows.length ? `<div style="margin-top:10px">${rows.map(c => `<div class="kv"><span>${coin(c, 22)}${nm(c)}</span><span>${fmt(bal[c], decOf(c))} ${cs(c)}</span></div>`).join('')}</div>` : '<p class="sub" style="margin-top:8px">Пока пусто. Пополните баланс, чтобы начать.</p>'}
+      <button class="ghost" id="pTop">Пополнить баланс</button>
+    </section>
+    <div class="eyebrow">Быстрые действия</div>
+    <div class="quick"><button data-q="swap"><i>↔</i>Обмен</button><button data-q="buy"><i>＋</i>Купить криптовалюту</button><button data-q="send"><i>↗</i>Отправить</button><button data-q="more"><i>•••</i>Ещё</button></div>
+    <div class="eyebrow">Аккаунт</div>
+    ${row('hist', '◷', 'История операций', 'Все ваши операции')}
+    ${row('set', '⚙', 'Настройки и безопасность', 'Конфиденциальность и предпочтения')}
+    ${row('addr', '◇', 'Сохранённые адреса', 'Управление кошельками')}
+    ${adm ? row('admin', '★', 'Админ-панель', 'Заявки, реквизиты, настройки') : ''}`;
+  $('pTop').onclick = () => { haptic(); show('top'); };
+  document.querySelectorAll('#profBody [data-q]').forEach(b => b.onclick = () => { haptic(); b.dataset.q === 'more' ? openMore() : show(b.dataset.q); });
+  document.querySelectorAll('#profBody [data-go]').forEach(b => b.onclick = () => { haptic(); show(b.dataset.go); });
+}
+
+/* ---- история ---- */
+function renderHist(){
+  const b = $('histBody');
+  if (!hist.length) { b.innerHTML = '<div class="empty"><b>Операций пока нет</b>Сделайте первую покупку или обмен.</div>'; return; }
+  b.innerHTML = hist.map(h => `<div class="hi"><div>${ttl(h)}<small>${new Date(h.ts).toLocaleString('ru-RU', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})} · №${h.id}</small></div>
+    <div class="r">${h.type === 'withdraw' ? '−' + esc(h.amt) + ' ' + h.from : '+' + esc(h.out) + ' ' + cs(h.to)}<small class="${h.st === 'Завершён' ? 'ok' : h.st === 'Отклонён' ? 'bad' : 'wait'}">${h.st}</small></div></div>`).join('');
+}
+
+/* ---- шаги заявки ---- */
+$('flowBack').onclick = () => {
+  const o = order;
+  if (o && o.step === 2 && o.type !== 'topup') { o.step = 1; renderFlow(); }
+  else show(!o ? 'swap' : o.type === 'topup' ? 'top' : o.type === 'withdraw' ? 'send' : o.type === 'buy' ? 'buy' : 'swap');
+};
+function renderFlow(){
+  const o = order, b = $('flowBody');
+  document.querySelectorAll('#prog i').forEach((e, i) => e.classList.toggle('on', i < o.step));
+  $('flowTitle').textContent = ['', 'Подтверждение', 'Оплата', 'Готово'][o.step];
+  $('flowBack').style.visibility = o.step === 3 ? 'hidden' : 'visible';
+  if (o.step === 2) { (o.type === 'buy' || (o.type === 'topup' && o.from === 'RUB')) ? renderBuyPay() : renderDepPay(); return; }
+
+  if (o.step === 1) {
+    const needAddr = o.type === 'swap' && !o.fb;
+    const rows = o.type === 'withdraw'
+      ? `<div class="kv"><span>Монета</span><span>${o.from}</span></div><div class="kv"><span>Сумма</span><span>${esc(o.amt)} ${o.from}</span></div><div class="kv"><span>Адрес</span><span style="word-break:break-all;max-width:62%">${esc(o.addr)}</span></div>`
+      : `<div class="kv"><span>Отдаёте</span><span>${esc(o.amt)} ${cs(o.from)}</span></div><div class="kv"><span>Получаете</span><span>${esc(o.out)} ${cs(o.to)}</span></div><div class="kv"><span>Курс</span><span>${esc(o.rate)}</span></div><div class="kv"><span>Комиссия</span><span>${o.type === 'buy' ? 'включена в курс' : pct()}</span></div>`;
+    const note = o.type === 'withdraw' ? 'Сумма спишется с баланса после подтверждения, заявку обработает администратор.'
+      : o.fb ? `Сумма спишется с баланса, а ${o.to} зачислятся на баланс после подтверждения.`
+      : o.type === 'buy' ? `Купленные ${o.to} появятся на балансе в профиле после подтверждения оплаты.` : '';
+    const sv = needAddr ? addrs.filter(x => x.coin === o.to) : [];
+    b.innerHTML = `<div class="card">${rows}</div>
+      ${note ? `<p class="sub" style="margin-top:20px">${note}</p>` : `<p class="sub" style="margin-top:20px">Адрес кошелька для получения ${o.to}</p>
+      <input class="field" id="addrIn" placeholder="Вставьте адрес" autocomplete="off" value="${esc(o.addr)}">
+      ${sv.length ? '<div class="chips">' + sv.map((x, i) => `<button class="chip" data-i="${i}">${esc(x.label)}</button>`).join('') + '</div>' : ''}`}
+      <div class="spacer"></div>
+      <button class="cta" id="next" style="margin-top:16px" ${needAddr && o.addr.length < 10 ? 'disabled' : ''}>${o.fb || o.type === 'withdraw' ? 'Подтвердить' : 'Продолжить'}</button>`;
+    if ($('addrIn')) $('addrIn').oninput = e => { o.addr = e.target.value.trim(); $('next').disabled = o.addr.length < 10; };
+    document.querySelectorAll('#flowBody .chip[data-i]').forEach(c => c.onclick = () => { o.addr = sv[+c.dataset.i].addr; $('addrIn').value = o.addr; $('next').disabled = false; haptic(); });
+    $('next').onclick = () => { haptic(); if (o.fb || o.type === 'withdraw') { confirmSent(); return; } o.step = 2; renderFlow(); };
+  }
+
+  if (o.step === 3) {
+    const sub = o.type === 'topup' ? 'Баланс пополнится после подтверждения платежа.'
+      : o.type === 'buy' ? 'Монеты зачислятся на баланс в профиле после подтверждения оплаты.'
+      : o.type === 'withdraw' ? 'Администратор отправит средства на указанный адрес.'
+      : o.fb ? 'Обмен выполнится после подтверждения администратором.' : 'Обычно это занимает несколько минут. Статус появится в истории.';
+    b.innerHTML = `
+      <div class="big">${o.fb || o.type === 'withdraw' ? 'Заявка принята' : 'Проверяем перевод'}</div>
+      <p class="sub">${sub}</p>
+      <div class="card" style="margin-top:22px">
+        <div class="kv"><span>Заявка</span><span>№${o.id}</span></div>
+        <div class="kv"><span>Статус</span><span class="wait">В обработке</span></div>
+      </div>
+      <div class="spacer"></div>
+      <button class="ghost" id="toHist">Открыть историю</button>
+      <button class="cta" id="fin" style="margin-top:10px">Готово</button>`;
+    $('toHist').onclick = () => show('hist');
+    $('fin').onclick = () => {
+      if (o.type === 'topup') { $('topAmt').value = ''; show('prof'); }
+      else if (o.type === 'withdraw') { $('sndAmt').value = ''; show('prof'); }
+      else if (o.type === 'buy') { $('bAmt').value = ''; $('bOut').value = ''; buySrc = 'rub'; show('buy'); }
+      else { $('amt').value = ''; show('swap'); }
+    };
+  }
+}
+
+async function confirmSent(){
+  const o = order; haptic('medium');
+  const btn = $('sent') || $('next'); if (btn) btn.disabled = true;
+  const rec = {id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr || '', pay:o.pay || '', fb:o.fb ? 1 : 0};
+  if (SERVER) {
+    try { const r = await api('order.create', {order:rec}); hist.unshift(r.order); }
+    catch(e){ if (btn) btn.disabled = false; msg('Не удалось отправить заявку: ' + e.message); return; }
+  } else { hist.unshift({...rec, ts:Date.now(), st:'В обработке'}); saveHist(); }
+  o.step = 3; renderFlow();
+}
+
+function renderBuyPay(){
+  const o = order, list = usable();
+  const i = Math.min(o.ri || 0, Math.max(list.length - 1, 0)), r = list[i] || null;
+  o.pay = r ? [r.bank, r.num].filter(Boolean).join(' · ') : '';
+  const sum = fmt(parseFloat(String(o.amt).replace(',', '.')) || 0, 2);
+  $('flowBody').innerHTML = `
+    <div class="big">Переведите ${sum} ₽</div>
+    <p class="sub">Заявка №${o.id}. Переведите точную сумму по реквизитам ниже.</p>
+    ${list.length > 1 ? `<div class="chips">${list.map((x, k) => `<button class="chip ${k === i ? 'on' : ''}" data-k="${k}">${esc(x.bank || 'Реквизит ' + (k + 1))}</button>`).join('')}</div>` : ''}
+    <div class="card" style="margin-top:18px">
+      <div class="kv"><span>Банк</span><span>${esc(r ? r.bank || '—' : '—')}</span></div>
+      <div class="kv"><span>Номер</span><span>${esc(r ? r.num : 'не указан')}</span></div>
+      <div class="kv"><span>Получатель</span><span>${esc(r ? r.name || '—' : '—')}</span></div>
+    </div>
+    <button class="ghost" id="copy" ${r ? '' : 'disabled'}>Скопировать номер</button>
+    ${r && r.note ? `<p class="sub" style="margin-top:16px">${esc(r.note)}</p>` : ''}
+    ${r ? '' : '<p class="sub" style="margin-top:16px">Реквизиты ещё не заданы. Попробуйте позже.</p>'}
+    <div class="spacer"></div>
+    <button class="cta" id="sent" style="margin-top:16px" ${r ? '' : 'disabled'}>Я оплатил</button>`;
+  document.querySelectorAll('#flowBody .chip').forEach(c => c.onclick = () => { o.ri = +c.dataset.k; haptic(); renderBuyPay(); });
+  if (r) $('copy').onclick = () => { try { navigator.clipboard.writeText(r.num); } catch(e){} haptic(); $('copy').textContent = 'Скопировано'; };
+  $('sent').onclick = confirmSent;
+}
+
+function renderDepPay(){
+  const o = order, a = (req.dep && req.dep[o.from]) || '';
+  o.pay = a;
+  $('flowBody').innerHTML = `
+    <div class="big">Отправьте ${esc(o.amt)} ${o.from}</div>
+    <p class="sub">Заявка №${o.id}. Отправьте точную сумму на адрес ниже${o.type === 'topup' ? `, на баланс зачислится ${esc(o.amt)} ${o.from}` : ''}.</p>
+    <div class="addr">${esc(a || 'Адрес ещё не задан администратором')}</div>
+    <button class="ghost" id="copy" ${a ? '' : 'disabled'}>Скопировать адрес</button>
+    <p class="sub" style="margin-top:16px">Проверьте сеть перед отправкой: перевод в другую сеть может быть потерян.</p>
+    <div class="spacer"></div>
+    <button class="cta" id="sent" style="margin-top:16px" ${a ? '' : 'disabled'}>Я отправил</button>`;
+  if (a) $('copy').onclick = () => { try { navigator.clipboard.writeText(a); } catch(e){} haptic(); $('copy').textContent = 'Скопировано'; };
+  $('sent').onclick = confirmSent;
+}
+
+function depHtml(){
+  return tokens.map(t => `<div class="lbl">${t.sym}: сеть и адрес</div><input class="field" id="d_${t.sym}" value="${esc(req.dep[t.sym] || '')}" style="margin-top:6px">`).join('')
+    + '<button class="ghost" id="dSave" style="margin-top:14px">Сохранить адреса</button>';
+}
+
 render(); renderBuy(); loadRates(); SERVER ? boot() : loadConfig();
+initUI(); setChips(); setInterval(() => setUpd(), 30000);
+let seenBefore = false; try { seenBefore = localStorage.getItem('seen') === '1'; } catch(e){}
+if (seenBefore) { document.body.classList.add('splash'); splashTimer = setTimeout(() => { if (curView === 'home') show('buy'); }, 5000); }
 setInterval(() => { if (SERVER && isAdminSrv && $('v-admin').classList.contains('on')) loadAdmin(); }, 30000);
 setInterval(loadRates, 60000);
 </script>
