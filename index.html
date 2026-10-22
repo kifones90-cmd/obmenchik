@@ -118,6 +118,52 @@ h1{font:700 25px/1.2 var(--sans);letter-spacing:-.01em}
 .splash #splashBar{display:block;animation:splashfill 5s linear forwards}
 @keyframes splashfill{to{width:100%}}
 @media (prefers-reduced-motion:reduce){.splash #splashBar{animation:none;width:100%}}
+
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bob{50%{transform:translateY(-7px)}}
+@keyframes floaty{50%{transform:translateY(-7px) scale(1.025)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(215,255,63,0)}50%{box-shadow:0 8px 30px rgba(215,255,63,.3)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(117,214,154,.55)}100%{box-shadow:0 0 0 9px rgba(117,214,154,0)}}
+@keyframes wave{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.9);opacity:0}}
+@keyframes shine{0%,55%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes halo{0%,100%{box-shadow:0 0 50px rgba(215,255,63,.08)}50%{box-shadow:0 0 90px rgba(215,255,63,.22)}}
+.view.on>*{animation:rise .55s cubic-bezier(.2,.8,.2,1) both}
+.view.on>*:nth-child(2){animation-delay:0.045s}
+.view.on>*:nth-child(3){animation-delay:0.090s}
+.view.on>*:nth-child(4){animation-delay:0.135s}
+.view.on>*:nth-child(5){animation-delay:0.180s}
+.view.on>*:nth-child(6){animation-delay:0.225s}
+.view.on>*:nth-child(7){animation-delay:0.270s}
+.view.on>*:nth-child(8){animation-delay:0.315s}
+.view.on>*:nth-child(9){animation-delay:0.360s}
+.view.on>*:nth-child(10){animation-delay:0.405s}
+.view.on>*:nth-child(11){animation-delay:0.450s}
+.view.on>*:nth-child(12){animation-delay:0.495s}
+.stepin{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+.o1{animation:halo 4.5s ease-in-out infinite}
+.o3{animation:floaty 5s ease-in-out infinite}
+.o3::before{content:"";position:absolute;inset:0;border-radius:50%;border:1px solid rgba(215,255,63,.55);animation:wave 3.2s ease-out infinite}
+.spin{inset:0;border:0!important;background:none;animation:spin 16s linear infinite}
+.s2{inset:32px;animation-duration:11s;animation-direction:reverse}
+.spin b{position:absolute;left:50%;top:-5px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--pos);box-shadow:0 0 14px var(--pos)}
+.s2 b{top:auto;bottom:-5px;background:var(--accent);box-shadow:0 0 14px var(--accent)}
+.c1{animation:bob 5.5s ease-in-out infinite}.c2{animation:bob 6.5s ease-in-out -2s infinite}
+.view.on>#goBuy{animation:rise .55s cubic-bezier(.2,.8,.2,1) .4s both,glow 2.8s ease-in-out 1.3s infinite}
+.cta{position:relative;overflow:hidden}
+.cta::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.5) 50%,transparent 65%);transform:translateX(-130%);animation:shine 4.8s ease-in-out infinite;pointer-events:none}
+.cta:disabled::after{display:none}
+.live i{animation:pulse 1.8s ease-out infinite}
+.tab{transition:background .25s,color .25s}.tab.on svg{animation:pop .45s cubic-bezier(.3,1.5,.5,1)}
+.sheet.open .opt{animation:rise .4s cubic-bezier(.2,.8,.2,1) both}
+.sheet.open .opt:nth-child(2){animation-delay:.04s}.sheet.open .opt:nth-child(3){animation-delay:.08s}.sheet.open .opt:nth-child(4){animation-delay:.12s}.sheet.open .opt:nth-child(5){animation-delay:.16s}.sheet.open .opt:nth-child(6){animation-delay:.2s}
+.done{width:64px;height:64px;margin:6px 0 16px;display:block}
+.done circle,.done path{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:170;stroke-dashoffset:170;animation:draw .7s .1s ease forwards}
+.done path{stroke-dasharray:44;stroke-dashoffset:44;animation-delay:.55s;animation-duration:.4s}
+.spinner{width:46px;height:46px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .9s linear infinite;margin:8px 0 18px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -129,7 +175,7 @@ h1{font:700 25px/1.2 var(--sans);letter-spacing:-.01em}
   <h2 class="hero">Криптовалюта<br>без лишних<br>сложностей.</h2>
   <p class="hl">Свобода в каждом действии.</p>
   <p class="copy">Покупайте, обменивайте и храните активы просто, прозрачно и уверенно.</p>
-  <div class="orbit"><i class="o1"></i><i class="o2"></i><i class="o3">₿</i><i class="d1"></i><i class="d2"></i><span class="ch c1" id="chipBtc">BTC</span><span class="ch c2">USDT &nbsp;СТАБИЛЬНО</span></div>
+  <div class="orbit"><i class="o1"></i><i class="o2"></i><i class="spin s1"><b></b></i><i class="spin s2"><b></b></i><i class="o3">₿</i><span class="ch c1" id="chipBtc">BTC</span><span class="ch c2">USDT &nbsp;СТАБИЛЬНО</span></div>
   <div class="card feat"><span class="ic">↗</span><div class="pt"><b>Уверенность в каждом шаге</b><small>Прозрачные курсы. Полный контроль.</small></div></div>
   <div class="spacer"></div>
   <button class="cta" id="goBuy">Начать ↗</button>
@@ -582,6 +628,21 @@ const newId = () => Math.floor(100000 + Math.random() * 900000);
 const numOf = id => parseFloat(($(id).value || '').replace(',', '.')) || 0;
 const clean = e => { e.target.value = e.target.value.replace(/[^0-9.,]/g, ''); };
 
+const tweens = {};
+const DONE_SVG = '<svg class="done" viewBox="0 0 64 64"><circle cx="32" cy="32" r="27"/><path d="M20 33l9 9 16-19"/></svg>';
+function tween(el, to, fmtFn){
+  const id = el.id, from = tweens[id] === undefined ? to : tweens[id];
+  tweens[id] = to;
+  const calm = (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) || typeof requestAnimationFrame !== 'function';
+  if (from === to || calm) { el.textContent = fmtFn(to); return; }
+  const t0 = Date.now();
+  const step = () => {
+    const k = Math.min(1, (Date.now() - t0) / 700), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = fmtFn(from + (to - from) * e);
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 function setUpd(txt){
   const e = $('upd'); if (!e) return;
   e.textContent = txt || (!ratesAt ? 'Загружается' : Date.now() - ratesAt < 60000 ? 'Только что обновлено' : 'Обновлено ' + Math.round((Date.now() - ratesAt) / 60000) + ' мин назад');
@@ -690,7 +751,7 @@ function renderBuy(){
   if (payIdx === 'bal' && !(rb > 0)) payIdx = 0;
   if (payIdx !== 'bal' && payIdx >= list.length) payIdx = 0;
   const fb = payIdx === 'bal', over = fb && a > rb;
-  $('bBal').textContent = fmt(rb, 2) + ' ₽';
+  tween($('bBal'), rb, v => fmt(v, 2) + ' ₽');
   coinBtn($('bTok'), buyTok, buyTok); $('bTk').textContent = buyTok;
   $('bPay').textContent = fb ? 'Баланс в рублях' : (list[payIdx] && list[payIdx].bank) || 'Банковский перевод';
   $('bPaySub').textContent = fb ? `Доступно ${fmt(rb, 2)} ₽` : list[payIdx] ? 'Комиссия включена в курс' : 'Реквизиты ещё не заданы';
@@ -803,7 +864,7 @@ function renderProf(){
     <section class="card id"><span class="ava">${esc(name[0].toUpperCase())}</span><div><b>${esc(name)}</b><small>${u.username ? '@' + esc(u.username) : 'Telegram'}</small></div></section>
     <section class="card deep" style="margin-top:14px">
       <div class="label">Общая стоимость портфеля</div>
-      <div class="big2">${fmt(totalRub(), 2)} ₽</div>
+      <div class="big2" id="pTotal">${fmt(tweens.pTotal !== undefined ? tweens.pTotal : totalRub(), 2)} ₽</div>
       ${rows.length ? `<div style="margin-top:10px">${rows.map(c => `<div class="kv"><span>${coin(c, 22)}${nm(c)}</span><span>${fmt(bal[c], decOf(c))} ${cs(c)}</span></div>`).join('')}</div>` : '<p class="sub" style="margin-top:8px">Пока пусто. Пополните баланс, чтобы начать.</p>'}
       <button class="ghost" id="pTop">Пополнить баланс</button>
     </section>
@@ -814,6 +875,7 @@ function renderProf(){
     ${row('set', '⚙', 'Настройки и безопасность', 'Конфиденциальность и предпочтения')}
     ${row('addr', '◇', 'Сохранённые адреса', 'Управление кошельками')}
     ${adm ? row('admin', '★', 'Админ-панель', 'Заявки, реквизиты, настройки') : ''}`;
+  tween($('pTotal'), totalRub(), v => fmt(v, 2) + ' ₽');
   $('pTop').onclick = () => { haptic(); show('top'); };
   document.querySelectorAll('#profBody [data-q]').forEach(b => b.onclick = () => { haptic(); b.dataset.q === 'more' ? openMore() : show(b.dataset.q); });
   document.querySelectorAll('#profBody [data-go]').forEach(b => b.onclick = () => { haptic(); show(b.dataset.go); });
@@ -835,6 +897,8 @@ $('flowBack').onclick = () => {
 };
 function renderFlow(){
   const o = order, b = $('flowBody');
+  const sk = o.id + ':' + o.step;
+  if (b.dataset.sk !== sk) { b.dataset.sk = sk; b.classList.remove('stepin'); void b.offsetWidth; b.classList.add('stepin'); }
   document.querySelectorAll('#prog i').forEach((e, i) => e.classList.toggle('on', i < o.step));
   $('flowTitle').textContent = ['', 'Подтверждение', 'Оплата', 'Готово'][o.step];
   $('flowBack').style.visibility = o.step === 3 ? 'hidden' : 'visible';
@@ -866,6 +930,7 @@ function renderFlow(){
       : o.type === 'withdraw' ? 'Администратор отправит средства на указанный адрес.'
       : o.fb ? 'Обмен выполнится после подтверждения администратором.' : 'Обычно это занимает несколько минут. Статус появится в истории.';
     b.innerHTML = `
+      ${o.fb || o.type === 'withdraw' ? DONE_SVG : '<div class="spinner"></div>'}
       <div class="big">${o.fb || o.type === 'withdraw' ? 'Заявка принята' : 'Проверяем перевод'}</div>
       <p class="sub">${sub}</p>
       <div class="card" style="margin-top:22px">
