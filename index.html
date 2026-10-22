@@ -164,10 +164,17 @@ h1{font:700 25px/1.2 var(--sans);letter-spacing:-.01em}
 .done path{stroke-dasharray:44;stroke-dashoffset:44;animation-delay:.55s;animation-duration:.4s}
 .spinner{width:46px;height:46px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .9s linear infinite;margin:8px 0 18px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.topr{display:flex;gap:8px}
+.wbtn{position:relative;display:grid;place-items:center;color:var(--text)}
+.wbtn.has::after{content:"";position:absolute;top:6px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.wrow{cursor:default}.wrow .price{text-align:right;color:var(--text);font-weight:600;font-size:14px}
+.wrow .price small{display:block;color:var(--muted);font-weight:400;font-size:11px;margin-top:2px}
+.wtotal{display:flex;justify-content:space-between;align-items:baseline;padding:8px 4px 12px;border-bottom:1px solid var(--line)}
+.wtotal b{font:700 20px var(--sans)}
 </style>
 </head>
 <body>
-<div class="top" id="topbar"><div class="brand"><b>c</b>CRYPTA</div><button class="avatar" id="avatar" aria-label="Профиль">A</button></div>
+<div class="top" id="topbar"><div class="brand"><b>c</b>CRYPTA</div><div class="topr"><button class="avatar wbtn" id="walletBtn" aria-label="Кошелёк"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 8V7a2.5 2.5 0 0 1 2.5-2.5h10.5V8"/><rect x="3.5" y="7.5" width="17" height="12" rx="3"/><path d="M16 13.5h2"/></svg></button><button class="avatar" id="avatar" aria-label="Профиль">A</button></div></div>
 
 <main class="view on" id="v-home">
   <div class="splashbar" id="splashBar"></div>
@@ -186,7 +193,7 @@ h1{font:700 25px/1.2 var(--sans);letter-spacing:-.01em}
 <main class="view" id="v-buy">
   <h1>Купить криптовалюту</h1>
   <p class="lead">Пополните свой криптопортфель.</p>
-  <section class="card">
+  <section class="card" id="bBalCard" style="cursor:pointer">
     <div class="label">Доступно для покупки</div>
     <div class="row"><div class="amount sm" id="bBal">0 ₽</div><button class="pill" id="bTop">Пополнить ↗</button></div>
   </section>
@@ -421,7 +428,7 @@ function renderAdmin(){
         </div>
         ${h.addr ? `<p class="sub" style="word-break:break-all;margin-top:8px">Кошелёк клиента: ${esc(h.addr)}</p>` : ''}
         ${h.pay ? `<p class="sub" style="margin-top:8px">Оплата на: ${esc(h.pay)}</p>` : ''}
-        ${h.st === 'В обработке' ? `<div class="mini"><button data-id="${h.id}" data-key="${h.key || ''}" data-st="Отклонён">Отклонить</button><button class="pri" data-id="${h.id}" data-key="${h.key || ''}" data-st="Завершён">${(h.type === 'topup' || (h.type === 'buy' && !h.fb)) ? 'Зачислить на баланс' : h.type === 'withdraw' ? 'Отправлено' : h.fb ? 'Выполнить' : 'Завершить'}</button></div>` : ''}
+        ${h.st === 'В обработке' ? `<div class="mini"><button data-id="${h.id}" data-key="${h.key || ''}" data-st="Отклонён">Отклонить</button><button class="pri" data-id="${h.id}" data-key="${h.key || ''}" data-st="Завершён">${(h.type === 'topup' || h.tb || (h.type === 'buy' && !h.fb)) ? 'Зачислить на баланс' : h.type === 'withdraw' ? 'Отправлено' : h.fb ? 'Выполнить' : 'Завершить'}</button></div>` : ''}
       </div>`).join('') : '<p class="sub">Заявок пока нет. Создайте тестовую на вкладке «Обмен».</p>'}
     ${SERVER ? '' : '<p class="sub" style="margin-top:20px">Сервер не подключён: данные хранятся только на этом устройстве.</p>'}`;
   $('bz').onclick = () => { req.on = !req.on; saveReq(); haptic(); renderBuy(); renderAdmin(); };
@@ -579,7 +586,7 @@ async function boot(){
     const fresh = hist.filter(h => h.key && Date.now() - h.ts < 120000 && !srv.some(o => o.key === h.key));
     hist = [...fresh, ...srv];
   } catch(e){ srvErr = e.message; setUpd('Нет связи с сервером'); }
-  render(); renderBuy(); refreshView();
+  render(); renderBuy(); refreshView(); setWalletDot();
 }
 
 async function pushConfig(){
@@ -697,7 +704,7 @@ function openSheetHtml(title, html, cb){
   $('sheetT').textContent = title; $('list').innerHTML = html; sheetCb = cb;
   $('ov').classList.add('open'); $('sheet').classList.add('open');
 }
-$('list').addEventListener('click', e => { const b = e.target.closest('.opt'); if (b && sheetCb) sheetCb(b.dataset.s); });
+$('list').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (b && sheetCb) sheetCb(b.dataset.s); });
 function openSheet(which){
   haptic();
   if (which === 'pay') {
@@ -737,7 +744,7 @@ function render(){
 function startFlow(){
   const a = parse(), f = by(from), t = by(to);
   const out = a * (f.price / t.price) * (1 - FEE);
-  order = {type:'swap', fb:SERVER && a > 0 && (bal[from] || 0) >= a ? 1 : 0, from, to, amt:plain(a, 8), out:plain(out, t.dec),
+  order = {type:'swap', fb:SERVER && a > 0 && (bal[from] || 0) >= a ? 1 : 0, tb:SERVER ? 1 : 0, from, to, amt:plain(a, 8), out:plain(out, t.dec),
            rate:$('rate').textContent, id:newId(), step:1, addr:''};
   show('flow'); renderFlow();
 }
@@ -764,7 +771,8 @@ function renderBuy(){
     : a > req.max ? `Максимум ${fmt(req.max, 0)} ₽` : over ? 'Недостаточно средств на балансе' : (fb ? 'Купить с баланса ↗' : 'Проверить покупку ↗');
 }
 $('payBtn').onclick = () => openSheet('pay');
-$('bTop').onclick = () => { haptic(); show('top'); };
+$('bTop').onclick = e => { if (e) e.stopPropagation(); haptic(); show('top'); };
+$('bBalCard').onclick = () => openWallet();
 $('bCta').onclick = () => {
   haptic('medium');
   order = {type:'buy', fb:payIdx === 'bal' ? 1 : 0, from:'RUB', to:buyTok, amt:$('bAmt').value, out:$('bOut').value, rate:$('bRate').textContent,
@@ -863,7 +871,7 @@ function renderProf(){
   $('profBody').innerHTML = `
     <section class="card id"><span class="ava">${esc(name[0].toUpperCase())}</span><div><b>${esc(name)}</b><small>${u.username ? '@' + esc(u.username) : 'Telegram'}</small></div></section>
     <section class="card deep" style="margin-top:14px">
-      <div class="label">Общая стоимость портфеля</div>
+      <div class="row" style="margin-bottom:12px"><div class="label" style="margin:0">Общая стоимость портфеля</div><button class="pill" id="pWal">Кошелёк</button></div>
       <div class="big2" id="pTotal">${fmt(tweens.pTotal !== undefined ? tweens.pTotal : totalRub(), 2)} ₽</div>
       ${rows.length ? `<div style="margin-top:10px">${rows.map(c => `<div class="kv"><span>${coin(c, 22)}${nm(c)}</span><span>${fmt(bal[c], decOf(c))} ${cs(c)}</span></div>`).join('')}</div>` : '<p class="sub" style="margin-top:8px">Пока пусто. Пополните баланс, чтобы начать.</p>'}
       <button class="ghost" id="pTop">Пополнить баланс</button>
@@ -877,6 +885,8 @@ function renderProf(){
     ${adm ? row('admin', '★', 'Админ-панель', 'Заявки, реквизиты, настройки') : ''}`;
   tween($('pTotal'), totalRub(), v => fmt(v, 2) + ' ₽');
   $('pTop').onclick = () => { haptic(); show('top'); };
+  $('pWal').onclick = () => openWallet();
+  setWalletDot();
   document.querySelectorAll('#profBody [data-q]').forEach(b => b.onclick = () => { haptic(); b.dataset.q === 'more' ? openMore() : show(b.dataset.q); });
   document.querySelectorAll('#profBody [data-go]').forEach(b => b.onclick = () => { haptic(); show(b.dataset.go); });
 }
@@ -905,20 +915,23 @@ function renderFlow(){
   if (o.step === 2) { (o.type === 'buy' || (o.type === 'topup' && o.from === 'RUB')) ? renderBuyPay() : renderDepPay(); return; }
 
   if (o.step === 1) {
-    const needAddr = o.type === 'swap' && !o.fb;
+    const needAddr = o.type === 'swap' && !o.fb && !o.tb;
+    const dest = (o.type === 'swap' && !o.fb && SERVER) ? `<div class="eyebrow">Куда получить</div><div class="chips" style="margin-top:0"><button class="chip ${o.tb ? 'on' : ''}" data-tb="1">На баланс</button><button class="chip ${o.tb ? '' : 'on'}" data-tb="0">На мой адрес</button></div>` : '';
     const rows = o.type === 'withdraw'
       ? `<div class="kv"><span>Монета</span><span>${o.from}</span></div><div class="kv"><span>Сумма</span><span>${esc(o.amt)} ${o.from}</span></div><div class="kv"><span>Адрес</span><span style="word-break:break-all;max-width:62%">${esc(o.addr)}</span></div>`
       : `<div class="kv"><span>Отдаёте</span><span>${esc(o.amt)} ${cs(o.from)}</span></div><div class="kv"><span>Получаете</span><span>${esc(o.out)} ${cs(o.to)}</span></div><div class="kv"><span>Курс</span><span>${esc(o.rate)}</span></div><div class="kv"><span>Комиссия</span><span>${o.type === 'buy' ? 'включена в курс' : pct()}</span></div>`;
     const note = o.type === 'withdraw' ? 'Сумма спишется с баланса после подтверждения, заявку обработает администратор.'
       : o.fb ? `Сумма спишется с баланса, а ${o.to} зачислятся на баланс после подтверждения.`
-      : o.type === 'buy' ? `Купленные ${o.to} появятся на балансе в профиле после подтверждения оплаты.` : '';
+      : o.type === 'buy' ? `Купленные ${o.to} появятся на балансе в профиле после подтверждения оплаты.`
+      : (o.type === 'swap' && o.tb) ? `Полученные ${o.to} зачислятся на баланс в кошельке после подтверждения.` : '';
     const sv = needAddr ? addrs.filter(x => x.coin === o.to) : [];
-    b.innerHTML = `<div class="card">${rows}</div>
+    b.innerHTML = `<div class="card">${rows}</div>${dest}
       ${note ? `<p class="sub" style="margin-top:20px">${note}</p>` : `<p class="sub" style="margin-top:20px">Адрес кошелька для получения ${o.to}</p>
       <input class="field" id="addrIn" placeholder="Вставьте адрес" autocomplete="off" value="${esc(o.addr)}">
       ${sv.length ? '<div class="chips">' + sv.map((x, i) => `<button class="chip" data-i="${i}">${esc(x.label)}</button>`).join('') + '</div>' : ''}`}
       <div class="spacer"></div>
       <button class="cta" id="next" style="margin-top:16px" ${needAddr && o.addr.length < 10 ? 'disabled' : ''}>${o.fb || o.type === 'withdraw' ? 'Подтвердить' : 'Продолжить'}</button>`;
+    document.querySelectorAll('#flowBody .chip[data-tb]').forEach(c => c.onclick = () => { o.tb = +c.dataset.tb; haptic(); renderFlow(); });
     if ($('addrIn')) $('addrIn').oninput = e => { o.addr = e.target.value.trim(); $('next').disabled = o.addr.length < 10; };
     document.querySelectorAll('#flowBody .chip[data-i]').forEach(c => c.onclick = () => { o.addr = sv[+c.dataset.i].addr; $('addrIn').value = o.addr; $('next').disabled = false; haptic(); });
     $('next').onclick = () => { haptic(); if (o.fb || o.type === 'withdraw') { confirmSent(); return; } o.step = 2; renderFlow(); };
@@ -928,7 +941,8 @@ function renderFlow(){
     const sub = o.type === 'topup' ? 'Баланс пополнится после подтверждения платежа.'
       : o.type === 'buy' ? 'Монеты зачислятся на баланс в профиле после подтверждения оплаты.'
       : o.type === 'withdraw' ? 'Администратор отправит средства на указанный адрес.'
-      : o.fb ? 'Обмен выполнится после подтверждения администратором.' : 'Обычно это занимает несколько минут. Статус появится в истории.';
+      : o.fb ? 'Обмен выполнится после подтверждения администратором.'
+      : o.tb ? 'Полученная криптовалюта зачислится на баланс после подтверждения.' : 'Обычно это занимает несколько минут. Статус появится в истории.';
     b.innerHTML = `
       ${o.fb || o.type === 'withdraw' ? DONE_SVG : '<div class="spinner"></div>'}
       <div class="big">${o.fb || o.type === 'withdraw' ? 'Заявка принята' : 'Проверяем перевод'}</div>
@@ -953,7 +967,7 @@ function renderFlow(){
 async function confirmSent(){
   const o = order; haptic('medium');
   const btn = $('sent') || $('next'); if (btn) btn.disabled = true;
-  const rec = {id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr || '', pay:o.pay || '', fb:o.fb ? 1 : 0};
+  const rec = {id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr || '', pay:o.pay || '', fb:o.fb ? 1 : 0, tb:o.tb ? 1 : 0};
   if (SERVER) {
     try { const r = await api('order.create', {order:rec}); hist.unshift(r.order); }
     catch(e){ if (btn) btn.disabled = false; msg('Не удалось отправить заявку: ' + e.message); return; }
@@ -1000,13 +1014,22 @@ function renderDepPay(){
   $('sent').onclick = confirmSent;
 }
 
+function openWallet(){
+  haptic();
+  const rows = holdings();
+  const body = rows.length
+    ? `<div class="wtotal"><span class="label" style="margin:0">Всего</span><b>≈ ${fmt(totalRub(), 2)} ₽</b></div>` + rows.map(c => `<div class="opt wrow">${coin(c, 34)}<span>${nm(c)}<small>${cs(c)}</small></span><span class="price">${fmt(bal[c], decOf(c))} ${cs(c)}${c === 'RUB' ? '' : `<small>≈ ${fmt(bal[c] * by(c).rub, 2)} ₽</small>`}</span></div>`).join('')
+    : '<p class="sub" style="padding:6px 0 4px">В кошельке пока пусто. Пополните баланс или купите криптовалюту.</p>';
+  openSheetHtml('Кошелёк', body + '<div class="mini" style="margin-top:16px"><button data-s="top">Пополнить</button><button class="pri" data-s="send">Отправить</button></div>', s => { closeSheet(); show(s); });
+}
+function setWalletDot(){ const b = $('walletBtn'); if (b) b.classList.toggle('has', holdings().length > 0); }
 function depHtml(){
   return tokens.map(t => `<div class="lbl">${t.sym}: сеть и адрес</div><input class="field" id="d_${t.sym}" value="${esc(req.dep[t.sym] || '')}" style="margin-top:6px">`).join('')
     + '<button class="ghost" id="dSave" style="margin-top:14px">Сохранить адреса</button>';
 }
 
 render(); renderBuy(); loadRates(); SERVER ? boot() : loadConfig();
-initUI(); setChips(); setInterval(() => setUpd(), 30000);
+initUI(); setChips(); setInterval(() => setUpd(), 30000); $('walletBtn').onclick = () => openWallet(); setWalletDot();
 let seenBefore = false; try { seenBefore = localStorage.getItem('seen') === '1'; } catch(e){}
 if (seenBefore) { document.body.classList.add('splash'); splashTimer = setTimeout(() => { if (curView === 'home') show('buy'); }, 5000); }
 setInterval(() => { if (SERVER && isAdminSrv && $('v-admin').classList.contains('on')) loadAdmin(); }, 30000);
