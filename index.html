@@ -416,6 +416,7 @@ function renderAdmin(){
     <div class="sec">Бот в Telegram</div>
     <p class="sub">Включает приветствие с баннером и кнопкой «Открыть CRYPTA», кнопку меню и описание бота.</p>
     <button class="ghost" id="botSetup">Настроить бота</button>
+    <button class="ghost" id="botHello">Прислать приветствие мне</button>
 
     <div class="sec">Уведомления</div>
     <p class="sub">Отправит тестовое сообщение всем администраторам и покажет, если что-то не настроено.</p>
@@ -477,7 +478,20 @@ function renderAdmin(){
     const btn = $('botSetup'); btn.textContent = 'Настраиваем…';
     const r = await api('admin.setup').catch(e => ({ok:false, error:e.message}));
     btn.textContent = 'Настроить бота';
-    msg(r.ok ? (r.failed && r.failed.length ? 'Не всё применилось: ' + r.failed.join('; ') : 'Готово. Отправьте боту /start, чтобы увидеть приветствие.') : 'Ошибка: ' + r.error);
+    const t = [];
+    if (!r.ok) t.push('Ошибка: ' + r.error);
+    else {
+      t.push(r.failed && r.failed.length ? 'Не всё применилось: ' + r.failed.join('; ') : 'Бот настроен.');
+      if (r.banner) t.push(r.banner.status === 200 ? 'Баннер найден.' : 'Баннер НЕ найден (' + (r.banner.status || 'нет связи') + '): загрузите banner.jpg в GitHub.');
+      if (r.webhook && r.webhook.last_error) t.push('Ошибка вебхука: ' + r.webhook.last_error);
+    }
+    msg(t.join(' ').slice(0, 250));
+  };
+  $('botHello').onclick = async () => {
+    const btn = $('botHello'); btn.textContent = 'Отправляем…';
+    const r = await api('admin.welcome').catch(e => ({ok:false, error:e.message}));
+    btn.textContent = 'Прислать приветствие мне';
+    msg((!r.ok ? 'Ошибка: ' + r.error : r.photo ? 'Приветствие с баннером отправлено вам в чат с ботом.' : 'Баннер не отправился: ' + r.error + (r.text ? ' Отправил приветствие текстом.' : '')).slice(0, 250));
   };
   $('ntTest').onclick = async () => {
     const btn = $('ntTest'); btn.textContent = 'Отправляем…';
