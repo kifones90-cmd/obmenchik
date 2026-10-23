@@ -114,10 +114,6 @@ h1{font:700 25px/1.2 var(--sans);letter-spacing:-.01em}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 #bCta,#cta,#goBuy{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 88px);z-index:3}
-.splashbar{display:none;height:3px;border-radius:2px;background:var(--accent);width:0;margin:0 0 18px}
-.splash #splashBar{display:block;animation:splashfill 5s linear forwards}
-@keyframes splashfill{to{width:100%}}
-@media (prefers-reduced-motion:reduce){.splash #splashBar{animation:none;width:100%}}
 
 @keyframes rise{from{opacity:0;transform:translateY(14px)}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -190,13 +186,15 @@ input,textarea,.addr{-webkit-user-select:text;user-select:text}
 .sheet{max-height:82dvh}
 .kb .tabs{display:none}.kb #bCta,.kb #cta,.kb #goBuy{bottom:calc(env(safe-area-inset-bottom,0px) + 12px)}
 @media (max-height:720px){.top{padding:4px 0 12px}.lead{margin-bottom:14px}.orbit{width:184px;height:184px;margin:16px auto 18px}.o2{inset:26px}.o3{inset:56px;font-size:34px}.r2{inset:26px}.hero{font-size:clamp(28px,8.6vw,33px)}.eyebrow{margin:16px 0 8px}.card{padding:14px}.big{font-size:23px}}
+.booting .view,.booting .tabs,.booting .top{visibility:hidden}
+.onhome .tabs,.onhome .topr{display:none}
+.onhome #goBuy{bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}
 </style>
 </head>
 <body>
 <div class="top" id="topbar"><div class="brand"><b>c</b>CRYPTA</div><div class="topr"><button class="avatar wbtn" id="walletBtn" aria-label="Кошелёк"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 8V7a2.5 2.5 0 0 1 2.5-2.5h10.5V8"/><rect x="3.5" y="7.5" width="17" height="12" rx="3"/><path d="M16 13.5h2"/></svg></button><button class="avatar" id="avatar" aria-label="Профиль">A</button></div></div>
 
 <main class="view on" id="v-home">
-  <div class="splashbar" id="splashBar"></div>
   <div class="eyebrow" style="margin:4px 0 14px">● Your assets. Your control.</div>
   <h2 class="hero">Криптовалюта<br>без лишних<br>сложностей.</h2>
   <p class="hl">Свобода в каждом действии.</p>
@@ -205,7 +203,6 @@ input,textarea,.addr{-webkit-user-select:text;user-select:text}
   <div class="card feat"><span class="ic">↗</span><div class="pt"><b>Уверенность в каждом шаге</b><small>Прозрачные курсы. Полный контроль.</small></div></div>
   <div class="spacer"></div>
   <button class="cta" id="goBuy">Начать ↗</button>
-  <button class="link" id="goProf">Уже с нами?  <b>Открыть профиль</b></button>
   <div class="foot">БЕЗОПАСНОСТЬ &nbsp;•&nbsp; ДЛЯ ВАС</div>
 </main>
 
@@ -316,7 +313,6 @@ input,textarea,.addr{-webkit-user-select:text;user-select:text}
 </main>
 
 <nav class="tabs">
-  <button class="tab on" data-v="home"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h12v-9"/></svg>Главная</button>
   <button class="tab" data-v="buy"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>Купить</button>
   <button class="tab" data-v="swap"><svg viewBox="0 0 24 24"><path d="M7 7h11M18 7l-3-3M18 7l-3 3M17 17H6M6 17l3-3M6 17l3 3"/></svg>Обмен</button>
   <button class="tab" data-v="prof"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>Профиль</button>
@@ -603,7 +599,7 @@ async function api(action, data){
 async function boot(){
   try {
     const r = await api('boot');
-    isAdminSrv = !!r.isAdmin; srvErr = '';
+    isAdminSrv = !!r.isAdmin; srvErr = ''; seenSrv = !!r.seen;
     if (r.config) {
       if (typeof r.config.fee === 'number') FEE = r.config.fee;
       paused = !!r.config.paused;
@@ -615,7 +611,7 @@ async function boot(){
     const fresh = hist.filter(h => h.key && Date.now() - h.ts < 120000 && !srv.some(o => o.key === h.key));
     hist = [...fresh, ...srv];
   } catch(e){ srvErr = e.message; setUpd('Нет связи с сервером'); }
-  render(); renderBuy(); refreshView(); setWalletDot();
+  render(); renderBuy(); refreshView(); setWalletDot(); startApp();
 }
 
 async function pushConfig(){
@@ -652,7 +648,7 @@ const nm = c => c === 'RUB' ? 'Рубль' : NAMES[c];
 const decOf = c => c === 'RUB' ? 2 : by(c).dec;
 const coin = (c, px = 38) => `<span class="coin" style="width:${px}px;height:${px}px;font-size:${Math.round(px * .5)}px;${c === 'RUB' ? 'background:var(--accent);color:var(--accent-ink)' : 'background:' + COL[c]}">${c === 'RUB' ? '₽' : GLY[c]}</span>`;
 const coinBtn = (el, c, sub) => { el.innerHTML = `${coin(c)}<span class="cn"><b>${nm(c)}</b><small>${sub}</small></span><span class="chev">▾</span>`; };
-let splashTimer = 0, ratesAt = 0, payIdx = 0, topCur = 'RUB', sndCur = null, sheetCb = null, curView = 'home', addrOpen = false, addrCoin = 'BTC', depOpen = false;
+let ratesAt = 0, payIdx = 0, topCur = 'RUB', sndCur = null, sheetCb = null, curView = 'home', addrOpen = false, addrCoin = 'BTC', depOpen = false;
 let addrs = []; try { addrs = JSON.parse(localStorage.getItem('addrs') || '[]'); } catch(e){}
 const usable = () => req.list.filter(x => x.num);
 const holdings = () => ['RUB', ...tokens.map(t => t.sym)].filter(c => (bal[c] || 0) > 0);
@@ -694,8 +690,8 @@ function initUI(){ $('avatar').textContent = (meUser().first_name || 'Г')[0].to
 const MAIN = ['home', 'buy', 'swap', 'prof'];
 const TABOF = {hist:'prof', top:'prof', send:'prof', addr:'prof', set:'prof', admin:'prof'};
 function show(v){
-  clearTimeout(splashTimer); document.body.classList.remove('splash');
-  if (v !== 'home') { try { localStorage.setItem('seen', '1'); } catch(e){} }
+  document.body.classList.remove('onhome');
+  if (v !== 'home') markSeen();
   curView = v;
   ['home','buy','swap','prof','hist','top','send','addr','set','flow','admin'].forEach(x => $('v-' + x).classList.toggle('on', x === v));
   document.body.classList.toggle('inflow', v === 'flow');
@@ -726,7 +722,6 @@ document.querySelectorAll('.tab').forEach(t => t.onclick = () => { haptic(); sho
 document.querySelectorAll('[data-back]').forEach(b => b.onclick = () => { haptic(); show(b.dataset.back); });
 $('avatar').onclick = () => { haptic(); show('prof'); };
 $('goBuy').onclick = () => { haptic('medium'); show('buy'); };
-$('goProf').onclick = () => { haptic(); show('prof'); };
 
 /* ---- выбор из списка ---- */
 function openSheetHtml(title, html, cb){
@@ -1043,6 +1038,19 @@ function renderDepPay(){
   $('sent').onclick = confirmSent;
 }
 
+let seenSrv = false, startDecided = false;
+const seenLocal = () => { try { return localStorage.getItem('seen') === '1'; } catch(e){ return false; } };
+function markSeen(){
+  try { localStorage.setItem('seen', '1'); } catch(e){}
+  if (SERVER && !seenSrv) { seenSrv = true; api('seen.set').catch(() => { seenSrv = false; }); }
+}
+function startApp(){
+  if (startDecided) return;
+  startDecided = true;
+  document.body.classList.remove('booting');
+  if (seenLocal() || seenSrv) show('buy');
+  else document.body.classList.add('onhome');
+}
 function mobileInit(){
   try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch(e){}
   const setH = () => { try { if (tg.viewportStableHeight) document.documentElement.style.setProperty('--tgh', tg.viewportStableHeight + 'px'); } catch(e){} };
@@ -1069,8 +1077,7 @@ function depHtml(){
 
 render(); renderBuy(); loadRates(); SERVER ? boot() : loadConfig();
 initUI(); setChips(); setInterval(() => setUpd(), 30000); $('walletBtn').onclick = () => openWallet(); setWalletDot(); mobileInit();
-let seenBefore = false; try { seenBefore = localStorage.getItem('seen') === '1'; } catch(e){}
-if (seenBefore) { document.body.classList.add('splash'); splashTimer = setTimeout(() => { if (curView === 'home') show('buy'); }, 5000); }
+if (seenLocal()) startApp(); else if (SERVER) { document.body.classList.add('booting'); setTimeout(startApp, 1800); } else startApp();
 setInterval(() => { if (SERVER && isAdminSrv && $('v-admin').classList.contains('on')) loadAdmin(); }, 30000);
 setInterval(loadRates, 60000);
 </script>
