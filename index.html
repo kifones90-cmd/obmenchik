@@ -189,6 +189,26 @@ input,textarea,.addr{-webkit-user-select:text;user-select:text}
 .booting .view,.booting .tabs,.booting .top{visibility:hidden}
 .onhome .tabs,.onhome .topr{display:none}
 .onhome #goBuy{bottom:calc(env(safe-area-inset-bottom,0px) + 18px)}
+.rcbox{margin-top:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.rcbox .ghost{margin-top:0}
+.rcimg{width:96px;height:96px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.timer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:12px 14px;font-size:12px;color:var(--muted)}
+.timer b{font:700 18px var(--sans);color:var(--accent);font-variant-numeric:tabular-nums}
+.gstat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.gstat div{background:var(--raise);border-radius:12px;padding:12px 6px;text-align:center}.gstat b{display:block;font:700 20px var(--sans)}.gstat small{color:var(--muted);font-size:11px}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(100%,340px);margin:18px auto}
+.cell{aspect-ratio:1;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;cursor:pointer;padding:0;color:var(--text);transition:transform .12s,border-color .2s,background .2s}
+.cell:not(:disabled):active{transform:scale(.95)}.cell:disabled{cursor:default}.cell svg{width:64%;height:64%}
+.cell.win{border-color:var(--accent);background:rgba(215,255,63,.09);animation:glow2 1.2s ease-in-out infinite}
+@keyframes glow2{50%{box-shadow:0 0 22px rgba(215,255,63,.3)}}
+.mark{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .35s ease forwards}.mark.still{animation:none;stroke-dashoffset:0}
+@keyframes draw{to{stroke-dashoffset:0}}
+.pl{display:flex;gap:10px}.pl .p{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 12px;transition:border-color .25s}.pl .p.on{border-color:var(--accent)}
+.pl .p b{display:block;font:600 14px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pl .p small{color:var(--muted);font-size:11px}
+.tbar{height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin:16px 0 6px}.tbar i{display:block;height:100%;background:var(--accent);width:100%;transition:width .25s linear}
+.stat-line{text-align:center;font:600 15px var(--sans);margin-top:4px}
+.res{text-align:center;margin-top:8px}.res .big{margin:0 0 6px}
+.gspin{width:46px;height:46px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);margin:40px auto 22px;animation:gs .9s linear infinite}
+@keyframes gs{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -301,6 +321,17 @@ input,textarea,.addr{-webkit-user-select:text;user-select:text}
   <div id="setBody"></div>
 </main>
 
+<main class="view" id="v-game">
+  <h1>Крестики-нолики</h1>
+  <p class="lead">Играйте с ботом или с живыми соперниками.</p>
+  <div id="gameBody"></div>
+</main>
+
+<main class="view" id="v-board">
+  <div class="subh"><button class="back" id="bdBack">‹ Выйти</button><span class="t" id="bdTitle">Игра</span></div>
+  <div id="bdBody"></div>
+</main>
+
 <main class="view" id="v-flow">
   <header><button class="back" id="flowBack">‹ Назад</button><span class="status" id="flowTitle"></span></header>
   <div class="prog" id="prog"><i></i><i></i><i></i></div>
@@ -315,6 +346,7 @@ input,textarea,.addr{-webkit-user-select:text;user-select:text}
 <nav class="tabs">
   <button class="tab" data-v="buy"><svg viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>Купить</button>
   <button class="tab" data-v="swap"><svg viewBox="0 0 24 24"><path d="M7 7h11M18 7l-3-3M18 7l-3 3M17 17H6M6 17l3-3M6 17l3 3"/></svg>Обмен</button>
+  <button class="tab" data-v="game"><svg viewBox="0 0 24 24"><path d="M9 4v16M15 4v16M4 9h16M4 15h16"/></svg>Игра</button>
   <button class="tab" data-v="prof"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>Профиль</button>
 </nav>
 
@@ -439,29 +471,36 @@ function renderAdmin(){
     </div>
 
     <div class="sec">Заявки</div>
-    <div class="chips" style="margin:4px 0">${['all','В обработке','Завершён','Отклонён'].map(f => `<button class="chip ${admFilter === f ? 'on' : ''}" data-f="${f}">${f === 'all' ? 'Все' : f}</button>`).join('')}</div>
+    <div class="chips" style="margin:4px 0">${['all','Ожидает оплаты','В обработке','Завершён','Отклонён','Отменён'].map(f => `<button class="chip ${admFilter === f ? 'on' : ''}" data-f="${f}">${f === 'all' ? 'Все' : f}</button>`).join('')}</div>
     ${H.length ? H.map(h => `
       <div class="hi" style="display:block">
         <div style="display:flex;justify-content:space-between">
           <div>${ttl(h)}<small>№${h.id} · ${new Date(h.ts).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}${h.un ? ' · ' + esc(h.un) : ''}</small></div>
-          <div class="r">${esc(h.amt)} ${cs(h.from)}<small class="${h.st === 'Завершён' ? 'ok' : h.st === 'Отклонён' ? 'bad' : 'wait'}">${h.st}</small></div>
+          <div class="r">${esc(h.amt)} ${cs(h.from)}<small class="${h.st === 'Завершён' ? 'ok' : (h.st === 'Отклонён' || h.st === 'Отменён') ? 'bad' : 'wait'}">${h.st}</small></div>
         </div>
         ${h.addr ? `<p class="sub" style="word-break:break-all;margin-top:8px">Кошелёк клиента: ${esc(h.addr)}</p>` : ''}
         ${h.pay ? `<p class="sub" style="margin-top:8px">Оплата на: ${esc(h.pay)}</p>` : ''}
+        ${h.late ? '<p class="sub bad" style="margin-top:8px">⚠ Оплата заявлена после таймера: проверьте поступление</p>' : ''}
+        ${h.rc ? `<button class="pill" data-sr="${h.key || ''}" style="margin-top:8px">📎 Показать чек</button>` : ''}
         ${h.st === 'В обработке' ? `<div class="mini"><button data-id="${h.id}" data-key="${h.key || ''}" data-st="Отклонён">Отклонить</button><button class="pri" data-id="${h.id}" data-key="${h.key || ''}" data-st="Завершён">${(h.type === 'topup' || h.tb || (h.type === 'buy' && !h.fb)) ? 'Зачислить на баланс' : h.type === 'withdraw' ? 'Отправлено' : h.fb ? 'Выполнить' : 'Завершить'}</button></div>` : ''}
       </div>`).join('') : '<p class="sub">Заявок пока нет. Создайте тестовую на вкладке «Обмен».</p>'}
     ${SERVER ? '' : '<p class="sub" style="margin-top:20px">Сервер не подключён: данные хранятся только на этом устройстве.</p>'}`;
   $('bz').onclick = () => { req.on = !req.on; saveReq(); haptic(); renderBuy(); renderAdmin(); };
   $('rTog').onclick = () => { reqOpen = !reqOpen; haptic(); renderAdmin(); };
+  document.querySelectorAll('#admBody .chip[data-need]').forEach(b => b.onclick = () => { req.rc = b.dataset.need === '1'; saveReq(); haptic(); renderAdmin(); });
+  document.querySelectorAll('#admBody [data-sr]').forEach(b => b.onclick = async () => {
+    try { const r = await api('admin.receipt', {key:b.dataset.sr}); openSheetHtml('Чек об оплате', '<img src="data:image/jpeg;base64,' + r.data + '" style="width:100%;border-radius:12px" alt="чек">', () => {}); }
+    catch(e){ msg(e.message); }
+  });
   $('dTog').onclick = () => { depOpen = !depOpen; haptic(); renderAdmin(); };
   if ($('dSave')) $('dSave').onclick = () => { tokens.forEach(t => { req.dep[t.sym] = $('d_' + t.sym).value.trim(); }); saveReq(); depOpen = false; haptic('medium'); renderAdmin(); msg('Адреса сохранены'); };
   $('admBody').querySelectorAll('[data-ri]').forEach(b => b.onclick = () => { const i = +b.dataset.ri; editIdx = editIdx === i ? null : i; haptic(); renderAdmin(); });
   if ($('rAdd')) $('rAdd').onclick = () => { editIdx = 'new'; haptic(); renderAdmin(); };
   if ($('rLim')) $('rLim').onclick = () => {
     const n = id => parseFloat($(id).value.replace(',', '.'));
-    const mn = n('rMin'), mx = n('rMax'), mk = n('rMk');
-    if (!(mn > 0 && mx >= mn && mk >= 0 && mk <= 50)) { msg('Проверьте лимиты и наценку'); return; }
-    req.min = mn; req.max = mx; req.markup = mk;
+    const mn = n('rMin'), mx = n('rMax'), mk = n('rMk'), tt = n('rTtl');
+    if (!(mn > 0 && mx >= mn && mk >= 0 && mk <= 50 && tt >= 0 && tt <= 720)) { msg('Проверьте лимиты и наценку'); return; }
+    req.min = mn; req.max = mx; req.markup = mk; req.ttl = tt;
     saveReq(); reqOpen = false; haptic('medium'); renderBuy(); renderAdmin(); msg('Сохранено');
   };
   if ($('rSave')) $('rSave').onclick = () => {
@@ -578,6 +617,8 @@ function fixReq(){
   ['bank','num','name','note'].forEach(k => delete req[k]);
   req.list = req.list.slice(0, 5);
   if (!req.dep || typeof req.dep !== 'object') req.dep = {};
+  if (typeof req.ttl !== 'number') req.ttl = 30;
+  req.rc = !!req.rc;
 }
 
 function reqHtml(){
@@ -587,7 +628,7 @@ function reqHtml(){
     f('rName', 'Получатель', x.name || '') + f('rNote', 'Комментарий для клиента', x.note || '') +
     `<div class="mini" style="margin-bottom:6px">${editIdx === 'new' ? '' : '<button id="rDel">Удалить</button>'}<button class="pri" id="rSave">Сохранить</button></div>`;
   let h = f('rMin', 'Минимальная сумма покупки, ₽', req.min, 'numeric') + f('rMax', 'Максимальная сумма, ₽', req.max, 'numeric') +
-    f('rMk', 'Наценка к курсу, %', req.markup, 'decimal') + '<button class="ghost" id="rLim" style="margin-top:14px">Сохранить лимиты</button>';
+    f('rMk', 'Наценка к курсу, %', req.markup, 'decimal') + f('rTtl', 'Время на оплату, мин (0 — без ограничения)', req.ttl, 'numeric') + '<div class="lbl">Чек об оплате</div><div class="chips" style="margin-top:8px"><button class="chip ' + (req.rc ? '' : 'on') + '" data-need="0">Не обязателен</button><button class="chip ' + (req.rc ? 'on' : '') + '" data-need="1">Обязателен</button></div><button class="ghost" id="rLim" style="margin-top:14px">Сохранить лимиты</button>';
   h += `<div class="lbl" style="margin-top:24px">Реквизиты · ${req.list.length} из 5</div>`;
   req.list.forEach((x, i) => {
     h += `<button class="set" data-ri="${i}">${esc(x.bank || 'Без названия')} · ${last4(x)}<em>${editIdx === i ? 'Закрыть' : 'Изменить'}</em></button>`;
@@ -701,14 +742,15 @@ function setChips(){
 function initUI(){ $('avatar').textContent = (meUser().first_name || 'Г')[0].toUpperCase(); }
 
 /* ---- навигация ---- */
-const MAIN = ['home', 'buy', 'swap', 'prof'];
-const TABOF = {hist:'prof', top:'prof', send:'prof', addr:'prof', set:'prof', admin:'prof'};
+const MAIN = ['home', 'buy', 'swap', 'game', 'prof'];
+const TABOF = {board:'game', hist:'prof', top:'prof', send:'prof', addr:'prof', set:'prof', admin:'prof'};
 function show(v){
   document.body.classList.remove('onhome');
   if (v !== 'home') markSeen();
   curView = v;
-  ['home','buy','swap','prof','hist','top','send','addr','set','flow','admin'].forEach(x => $('v-' + x).classList.toggle('on', x === v));
-  document.body.classList.toggle('inflow', v === 'flow');
+  ['home','buy','swap','game','board','prof','hist','top','send','addr','set','flow','admin'].forEach(x => $('v-' + x).classList.toggle('on', x === v));
+  document.body.classList.toggle('inflow', v === 'flow' || v === 'board');
+  if (v !== 'board') { clearTimeout(gPoll); clearInterval(gTick); clearTimeout(gSearch); }
   document.body.classList.toggle('subv', !MAIN.includes(v));
   const tab = TABOF[v] || v;
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.v === tab));
@@ -720,6 +762,7 @@ function show(v){
   if (v === 'send') renderSend();
   if (v === 'addr') renderAddr();
   if (v === 'set') renderSet();
+  if (v === 'game') { renderGame(); loadGame(); }
   if (v === 'admin') { renderAdmin(); if (SERVER) loadAdmin(); }
   if (SERVER && ['buy','swap','hist','prof','top','send'].includes(v)) boot();
   window.scrollTo(0, 0);
@@ -933,13 +976,21 @@ function renderProf(){
 function renderHist(){
   const b = $('histBody');
   if (!hist.length) { b.innerHTML = '<div class="empty"><b>Операций пока нет</b>Сделайте первую покупку или обмен.</div>'; return; }
-  b.innerHTML = hist.map(h => `<div class="hi"><div>${ttl(h)}<small>${new Date(h.ts).toLocaleString('ru-RU', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})} · №${h.id}</small></div>
-    <div class="r">${h.type === 'withdraw' ? '−' + esc(h.amt) + ' ' + h.from : '+' + esc(h.out) + ' ' + cs(h.to)}<small class="${h.st === 'Завершён' ? 'ok' : h.st === 'Отклонён' ? 'bad' : 'wait'}">${h.st}</small></div></div>`).join('');
+  b.innerHTML = hist.map(h => `<div class="hi"${h.st === 'Ожидает оплаты' ? ` data-rs="${h.key}" style="cursor:pointer"` : ''}><div>${ttl(h)}<small>${new Date(h.ts).toLocaleString('ru-RU', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})} · №${h.id}</small></div>
+    <div class="r">${h.type === 'withdraw' ? '−' + esc(h.amt) + ' ' + h.from : '+' + esc(h.out) + ' ' + cs(h.to)}<small class="${h.st === 'Завершён' ? 'ok' : (h.st === 'Отклонён' || h.st === 'Отменён') ? 'bad' : 'wait'}">${h.st === 'Ожидает оплаты' ? 'Продолжить оплату ›' : h.st}</small></div></div>`).join('');
+  document.querySelectorAll('#histBody [data-rs]').forEach(e => e.onclick = () => resumeOrder(hist.find(h => h.key === e.dataset.rs)));
+}
+function resumeOrder(h){
+  if (!h) return;
+  haptic();
+  order = {type:h.type, from:h.from, to:h.to, amt:h.amt, out:h.out, addr:h.addr || '', tb:h.tb ? 1 : 0, fb:0, id:h.id, key:h.key, exp:h.exp, skew:0, step:2, ri:0, pay:h.pay || ''};
+  show('flow'); renderFlow();
 }
 
 /* ---- шаги заявки ---- */
 $('flowBack').onclick = () => {
   const o = order;
+  if (o && o.step === 2) dropHold(o);
   if (o && o.step === 2 && o.type !== 'topup') { o.step = 1; renderFlow(); }
   else show(!o ? 'swap' : o.type === 'topup' ? 'top' : o.type === 'withdraw' ? 'send' : o.type === 'buy' ? 'buy' : 'swap');
 };
@@ -950,7 +1001,7 @@ function renderFlow(){
   document.querySelectorAll('#prog i').forEach((e, i) => e.classList.toggle('on', i < o.step));
   $('flowTitle').textContent = ['', 'Подтверждение', 'Оплата', 'Готово'][o.step];
   $('flowBack').style.visibility = o.step === 3 ? 'hidden' : 'visible';
-  if (o.step === 2) { (o.type === 'buy' || (o.type === 'topup' && o.from === 'RUB')) ? renderBuyPay() : renderDepPay(); return; }
+  if (o.step === 2) { holdThen(o, () => (o.type === 'buy' || (o.type === 'topup' && o.from === 'RUB')) ? renderBuyPay() : renderDepPay()); return; }
 
   if (o.step === 1) {
     const needAddr = o.type === 'swap' && !o.fb && !o.tb;
@@ -989,9 +1040,14 @@ function renderFlow(){
         <div class="kv"><span>Заявка</span><span>№${o.id}</span></div>
         <div class="kv"><span>Статус</span><span class="wait">В обработке</span></div>
       </div>
+      ${(SERVER && o.key && !o.hasRc && !o.fb && o.type !== 'withdraw') ? '<button class="ghost" id="rcLate">📎 Прикрепить чек об оплате</button>' : ''}
       <div class="spacer"></div>
       <button class="ghost" id="toHist">Открыть историю</button>
       <button class="cta" id="fin" style="margin-top:10px">Готово</button>`;
+    if ($('rcLate')) $('rcLate').onclick = () => pickReceipt(async b64 => {
+      try { const r = await api('receipt.upload', {key:o.key, data:b64}); o.hasRc = true; hist = hist.map(h => h.key === r.order.key ? r.order : h); haptic('medium'); if ($('rcLate')) $('rcLate').remove(); msg('Чек отправлен администратору'); }
+      catch(e){ msg(e.message); }
+    });
     $('toHist').onclick = () => show('hist');
     $('fin').onclick = () => {
       if (o.type === 'topup') { $('topAmt').value = ''; show('prof'); }
@@ -1002,25 +1058,97 @@ function renderFlow(){
   }
 }
 
-async function confirmSent(){
+const rcBlock = o => `<div class="rcbox">${o.rc ? `<img class="rcimg" src="data:image/jpeg;base64,${o.rc}" alt="чек"><button class="pill" id="rcDel">Убрать чек</button>` : '<button class="ghost" id="rcAdd">📎 Прикрепить чек об оплате</button>'}<p class="note2" style="margin:0">${req.rc ? 'Чек обязателен для проверки платежа' : 'Чек ускорит проверку платежа'}</p></div>`;
+const timerBlock = o => o.exp ? `<div class="card timer"><span>Курс зафиксирован ещё</span><b id="cd">${cdText(o)}</b></div>` : '';
+let cdT = 0;
+function leftMs(o){ return o.exp ? o.exp - (Date.now() + (o.skew || 0)) : Infinity; }
+function cdText(o){ const sec = Math.max(0, Math.ceil(leftMs(o) / 1000)); return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); }
+function startTimer(o){
+  clearInterval(cdT); if (!o.exp) return;
+  cdT = setInterval(() => {
+    if (order !== o || o.step !== 2) { clearInterval(cdT); return; }
+    if (leftMs(o) <= 0) { clearInterval(cdT); renderFlow(); return; }
+    const e = $('cd'); if (e) e.textContent = cdText(o);
+  }, 1000);
+}
+function bindRc(o, redraw){
+  if ($('rcAdd')) $('rcAdd').onclick = () => pickReceipt(b64 => { o.rc = b64; redraw(); });
+  if ($('rcDel')) $('rcDel').onclick = () => { o.rc = ''; redraw(); };
+}
+const canPay = (o, ok) => ok && (!req.rc || !!o.rc);
+
+function readImg(file){ return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = fr.result; }; fr.onerror = rej; fr.readAsDataURL(file); }); }
+async function compressImg(file){
+  const im = await readImg(file);
+  for (const [side, q] of [[1280, .78], [960, .7], [720, .6]]) {
+    const k = Math.min(1, side / Math.max(im.width, im.height)), c = document.createElement('canvas');
+    c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+    c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+    const b64 = c.toDataURL('image/jpeg', q).split(',')[1];
+    if (b64.length < 1200000) return b64;
+  }
+  throw new Error('слишком большое фото');
+}
+function pickReceipt(cb){
+  const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*';
+  i.onchange = () => { const f = i.files && i.files[0]; if (f) compressImg(f).then(cb).catch(() => msg('Не удалось прочитать фото, попробуйте другое')); };
+  i.click();
+}
+
+async function holdThen(o, draw){
+  if (!SERVER || o.key) return draw();
+  $('flowBody').innerHTML = '<div class="spinner" style="margin-top:40px"></div><p class="sub" style="text-align:center;margin-top:16px">Фиксируем курс…</p>';
+  try {
+    const r = await api('order.create', {order:{id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr || '', tb:o.tb ? 1 : 0, hold:1}});
+    o.key = r.order.key; o.exp = r.order.exp; o.skew = (r.now || Date.now()) - Date.now(); hist.unshift(r.order);
+  } catch(e){
+    msg('Не удалось создать заявку: ' + e.message);
+    if (o.type === 'topup') show('top'); else { o.step = 1; renderFlow(); }
+    return;
+  }
+  if (order === o && o.step === 2) draw();
+}
+function dropHold(o){
+  if (!SERVER || !o.key || o.paid) return;
+  const k = o.key; o.key = null; o.exp = 0; clearInterval(cdT);
+  const h = hist.find(x => x.key === k); if (h) h.st = 'Отменён';
+  api('order.cancel', {key:k}).catch(() => {});
+}
+function renderExpired(){
+  const o = order;
+  const h = hist.find(x => x.key === o.key); if (h) h.st = 'Отменён';
+  $('flowBody').innerHTML = `<div class="big">Время на оплату вышло</div>
+    <p class="sub">Курс мог измениться. Если вы уже перевели деньги, приложите чек и нажмите «Я уже оплатил»: администратор проверит платёж вручную.</p>
+    ${rcBlock(o)}
+    <div class="spacer"></div>
+    <button class="cta" id="lateSent" style="margin-top:16px" ${canPay(o, true) ? '' : 'disabled'}>Я уже оплатил</button>
+    <button class="ghost" id="again">Создать заново</button>`;
+  bindRc(o, renderExpired);
+  $('lateSent').onclick = () => { o.lateClaim = 1; payOrder(); };
+  $('again').onclick = () => { o.key = null; o.exp = 0; o.lateClaim = 0; if (o.type === 'topup') renderFlow(); else show(o.type === 'buy' ? 'buy' : 'swap'); };
+}
+async function payOrder(){
   const o = order; haptic('medium');
-  const btn = $('sent') || $('next'); if (btn) btn.disabled = true;
-  const rec = {id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr || '', pay:o.pay || '', fb:o.fb ? 1 : 0, tb:o.tb ? 1 : 0};
-  if (SERVER) {
-    try { const r = await api('order.create', {order:rec}); hist.unshift(r.order); }
-    catch(e){ if (btn) btn.disabled = false; msg('Не удалось отправить заявку: ' + e.message); return; }
-  } else { hist.unshift({...rec, ts:Date.now(), st:'В обработке'}); saveHist(); }
-  o.step = 3; renderFlow();
+  if (!SERVER || !o.key) return confirmSent();
+  const btn = $('sent'); if (btn) btn.disabled = true;
+  try {
+    const r = await api('order.pay', {key:o.key, pay:o.pay || '', receipt:o.rc || '', late:o.lateClaim ? 1 : 0});
+    hist = hist.map(h => h.key === r.order.key ? r.order : h);
+    o.hasRc = !!o.rc; o.rc = ''; o.paid = true;
+  } catch(e){ if (btn) btn.disabled = false; msg(e.message); return; }
+  clearInterval(cdT); o.step = 3; renderFlow();
 }
 
 function renderBuyPay(){
   const o = order, list = usable();
+  if (o.exp && leftMs(o) <= 0) return renderExpired();
   const i = Math.min(o.ri || 0, Math.max(list.length - 1, 0)), r = list[i] || null;
   o.pay = r ? [r.bank, r.num].filter(Boolean).join(' · ') : '';
   const sum = fmt(parseFloat(String(o.amt).replace(',', '.')) || 0, 2);
   $('flowBody').innerHTML = `
     <div class="big">Переведите ${sum} ₽</div>
     <p class="sub">Заявка №${o.id}. Переведите точную сумму по реквизитам ниже.</p>
+    ${timerBlock(o)}
     ${list.length > 1 ? `<div class="chips">${list.map((x, k) => `<button class="chip ${k === i ? 'on' : ''}" data-k="${k}">${esc(x.bank || 'Реквизит ' + (k + 1))}</button>`).join('')}</div>` : ''}
     <div class="card" style="margin-top:18px">
       <div class="kv"><span>Банк</span><span>${esc(r ? r.bank || '—' : '—')}</span></div>
@@ -1030,27 +1158,46 @@ function renderBuyPay(){
     <button class="ghost" id="copy" ${r ? '' : 'disabled'}>Скопировать номер</button>
     ${r && r.note ? `<p class="sub" style="margin-top:16px">${esc(r.note)}</p>` : ''}
     ${r ? '' : '<p class="sub" style="margin-top:16px">Реквизиты ещё не заданы. Попробуйте позже.</p>'}
+    ${rcBlock(o)}
     <div class="spacer"></div>
-    <button class="cta" id="sent" style="margin-top:16px" ${r ? '' : 'disabled'}>Я оплатил</button>`;
+    <button class="cta" id="sent" style="margin-top:16px" ${canPay(o, !!r) ? '' : 'disabled'}>Я оплатил</button>`;
   document.querySelectorAll('#flowBody .chip').forEach(c => c.onclick = () => { o.ri = +c.dataset.k; haptic(); renderBuyPay(); });
   if (r) $('copy').onclick = () => { try { navigator.clipboard.writeText(r.num); } catch(e){} haptic(); $('copy').textContent = 'Скопировано'; };
-  $('sent').onclick = confirmSent;
+  bindRc(o, renderBuyPay);
+  $('sent').onclick = payOrder; startTimer(o);
 }
 
 function renderDepPay(){
   const o = order, a = (req.dep && req.dep[o.from]) || '';
+  if (o.exp && leftMs(o) <= 0) return renderExpired();
   o.pay = a;
   $('flowBody').innerHTML = `
     <div class="big">Отправьте ${esc(o.amt)} ${o.from}</div>
     <p class="sub">Заявка №${o.id}. Отправьте точную сумму на адрес ниже${o.type === 'topup' ? `, на баланс зачислится ${esc(o.amt)} ${o.from}` : ''}.</p>
+    ${timerBlock(o)}
     <div class="addr">${esc(a || 'Адрес ещё не задан администратором')}</div>
     <button class="ghost" id="copy" ${a ? '' : 'disabled'}>Скопировать адрес</button>
     <p class="sub" style="margin-top:16px">Проверьте сеть перед отправкой: перевод в другую сеть может быть потерян.</p>
+    ${rcBlock(o)}
     <div class="spacer"></div>
-    <button class="cta" id="sent" style="margin-top:16px" ${a ? '' : 'disabled'}>Я отправил</button>`;
+    <button class="cta" id="sent" style="margin-top:16px" ${canPay(o, !!a) ? '' : 'disabled'}>Я отправил</button>`;
   if (a) $('copy').onclick = () => { try { navigator.clipboard.writeText(a); } catch(e){} haptic(); $('copy').textContent = 'Скопировано'; };
-  $('sent').onclick = confirmSent;
+  bindRc(o, renderDepPay);
+  $('sent').onclick = payOrder; startTimer(o);
 }
+
+async function confirmSent(){
+  const o = order; haptic('medium');
+  const btn = $('sent') || $('next'); if (btn) btn.disabled = true;
+  const rec = {id:o.id, type:o.type || 'swap', from:o.from, to:o.to, amt:o.amt, out:o.out, addr:o.addr || '', pay:o.pay || '', fb:o.fb ? 1 : 0, tb:o.tb ? 1 : 0};
+  if (SERVER) {
+    try { const r = await api('order.create', {order:rec}); hist.unshift(r.order); o.key = r.order.key; }
+    catch(e){ if (btn) btn.disabled = false; msg('Не удалось отправить заявку: ' + e.message); return; }
+  } else { hist.unshift({...rec, ts:Date.now(), st:'В обработке'}); saveHist(); }
+  o.step = 3; renderFlow();
+}
+
+
 
 let seenSrv = false, startDecided = false;
 const seenLocal = () => { try { return localStorage.getItem('seen') === '1'; } catch(e){ return false; } };
@@ -1062,6 +1209,8 @@ function startApp(){
   if (startDecided) return;
   startDecided = true;
   document.body.classList.remove('booting');
+  const sp = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || '';
+  if (SERVER && /^g_[a-z0-9]{8}$/.test(sp)) { markSeen(); show('game'); joinInvite(sp.slice(2)); return; }
   if (seenLocal() || seenSrv) show('buy');
   else document.body.classList.add('onhome');
 }
@@ -1075,6 +1224,222 @@ function mobileInit(){
   }
   ['bAmt', 'bOut', 'amt', 'topAmt', 'sndAmt'].forEach(id => { const c = $(id).closest && $(id).closest('.card'); if (c) c.addEventListener('click', e => { if (!e.target.closest('button') && e.target !== $(id)) $(id).focus(); }); });
 }
+/* ======================= Игра: крестики-нолики ======================= */
+const LN = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+const judgeB = b => { for (const [a, c, d] of LN) if (b[a] !== '-' && b[a] === b[c] && b[a] === b[d]) return b[a]; return b.includes('-') ? '' : 'D'; };
+const winLine = b => LN.find(([a, c, d]) => b[a] !== '-' && b[a] === b[c] && b[a] === b[d]) || null;
+let GP = null, GTOP = [], gdiff = 'hard', G = null, gPoll = 0, gTick = 0, gSearch = 0, gErr = '';
+const botStat = () => { try { return JSON.parse(localStorage.getItem('botstat') || '{}'); } catch(e){ return {}; } };
+const mk = (c, still) => c === 'X'
+  ? `<svg viewBox="0 0 100 100" fill="none" stroke="#d7ff3f" stroke-width="11" stroke-linecap="round"><path class="mark ${still ? 'still' : ''}" pathLength="1" d="M24 24L76 76M76 24L24 76"/></svg>`
+  : `<svg viewBox="0 0 100 100" fill="none" stroke="#f5f7f2" stroke-width="11" stroke-linecap="round"><circle class="mark ${still ? 'still' : ''}" pathLength="1" cx="50" cy="50" r="27"/></svg>`;
+
+/* ---- бот: минимакс, три уровня ---- */
+const gmemo = new Map();
+function gscore(bd, turn, bot){
+  const k = bd + turn + bot; if (gmemo.has(k)) return gmemo.get(k);
+  const w = judgeB(bd), opp = bot === 'X' ? 'O' : 'X'; let r;
+  if (w === bot) r = 1; else if (w === opp) r = -1; else if (w === 'D') r = 0;
+  else {
+    r = turn === bot ? -2 : 2;
+    for (let i = 0; i < 9; i++) if (bd[i] === '-') { const s = gscore(bd.slice(0, i) + turn + bd.slice(i + 1), turn === 'X' ? 'O' : 'X', bot); r = turn === bot ? Math.max(r, s) : Math.min(r, s); }
+  }
+  gmemo.set(k, r); return r;
+}
+function botMove(bd, bot, diff){
+  const free = [...bd].map((c, i) => c === '-' ? i : -1).filter(i => i >= 0);
+  const pBest = diff === 'hard' ? 1 : diff === 'mid' ? 0.65 : 0.2;
+  if (Math.random() > pBest) return free[Math.floor(Math.random() * free.length)];
+  let best = -9, pick = [];
+  for (const i of free) { const s = gscore(bd.slice(0, i) + bot + bd.slice(i + 1), bot === 'X' ? 'O' : 'X', bot); if (s > best) { best = s; pick = [i]; } else if (s === best) pick.push(i); }
+  return pick[Math.floor(Math.random() * pick.length)];
+}
+
+/* ---- лобби ---- */
+async function loadGame(){
+  if (!SERVER) return;
+  try { GP = await api('game.me'); GTOP = (await api('game.top')).top || []; gErr = ''; } catch(e){ gErr = e.message; }
+  if (curView === 'game') renderGame();
+}
+function renderGame(){
+  const st = botStat(), p = GP && GP.player;
+  const diffs = [['easy', 'Лёгкий'], ['mid', 'Средний'], ['hard', 'Непобедимый']];
+  $('gameBody').innerHTML = `
+    ${GP && GP.active && GP.active.st === 'play' ? '<button class="cta" id="gResume" style="margin-bottom:14px">Вернуться в игру</button>' : ''}
+    ${SERVER ? `<section class="card deep"><div class="row"><div class="label" style="margin:0">Ваш рейтинг</div>${p ? `<span class="tk">№${p.rank} в рейтинге</span>` : ''}</div>
+      <div class="big2" style="margin:6px 0 12px">${p ? p.rating : '—'}</div>
+      <div class="gstat"><div><b>${p ? p.wins : 0}</b><small>побед</small></div><div><b>${p ? p.draws : 0}</b><small>ничьих</small></div><div><b>${p ? p.losses : 0}</b><small>поражений</small></div></div>
+      <div class="row" style="margin-top:14px"><div>⚡ Энергия: <b>${p ? p.energy : '—'}</b><span class="note2" style="display:block;margin:2px 0 0">${GP ? GP.daily : 5} бесплатно каждый день</span></div><button class="pill" id="gBuy">Пополнить ⭐</button></div></section>` : ''}
+    <div class="eyebrow">Против бота</div>
+    <section class="card"><div class="chips" style="margin-top:0">${diffs.map(([k, t]) => `<button class="chip ${k === gdiff ? 'on' : ''}" data-d="${k}">${t}</button>`).join('')}</div>
+      <p class="note2" style="margin:10px 0 0">Бесплатно и без ограничений. Побед: ${st.w || 0} · ничьих: ${st.d || 0} · поражений: ${st.l || 0}</p>
+      <button class="cta" id="gBot" style="margin-top:12px">Играть с ботом</button></section>
+    <div class="eyebrow">С живыми игроками</div>
+    <section class="card">${SERVER ? `<button class="cta" id="gFind">Найти соперника · 1 ⚡</button><button class="ghost" id="gInv">Позвать друга (бесплатно)</button>
+      <p class="note2" style="margin:10px 0 0">Рейтинговая игра, ход даётся 30 секунд. Звёзды покупают только энергию: призов и выплат нет.</p>` : '<p class="sub">Онлайн-игра станет доступна после подключения сервера.</p>'}
+      ${gErr ? `<p class="note2 bad" style="margin-top:10px">${esc(gErr)}</p>` : ''}</section>
+    ${GTOP.length ? `<div class="eyebrow">Топ игроков</div><section class="card">${GTOP.map((t, i) => `<div class="kv"><span>${i + 1}. ${esc(t.name)}</span><span>${t.rating}</span></div>`).join('')}</section>` : ''}`;
+  document.querySelectorAll('#gameBody [data-d]').forEach(b => b.onclick = () => { gdiff = b.dataset.d; haptic(); renderGame(); });
+  if ($('gBot')) $('gBot').onclick = () => { haptic('medium'); startBot(); };
+  if ($('gFind')) $('gFind').onclick = () => { haptic('medium'); findMatch(); };
+  if ($('gInv')) $('gInv').onclick = () => { haptic(); inviteFriend(); };
+  if ($('gBuy')) $('gBuy').onclick = () => openPacks();
+  if ($('gResume')) $('gResume').onclick = () => openPvp(GP.active);
+}
+function openPacks(){
+  if (!GP) return;
+  openSheetHtml('Энергия ⚡', Object.entries(GP.packs).map(([id, p]) => `<button class="opt" data-s="${id}"><span class="ic">⚡</span><span>${p.energy} энергии<small>на ${p.energy} рейтинговых игр</small></span><span class="price">${p.stars} ⭐</span></button>`).join('')
+    + '<p class="note2" style="margin-top:12px">Оплата звёздами Telegram. Это цифровая услуга: призов и вывода звёзд нет.</p>', async id => {
+    closeSheet();
+    try {
+      const r = await api('game.buy', {pack:id});
+      const done = s => { if (s === 'paid') { haptic('medium'); setTimeout(loadGame, 1500); setTimeout(loadGame, 5000); msg('Оплата прошла. Энергия зачислится через несколько секунд.'); } };
+      if (tg.openInvoice) tg.openInvoice(r.url, done); else tg.openTelegramLink(r.url);
+    } catch(e){ msg(e.message); }
+  });
+}
+
+/* ---- игра с ботом ---- */
+function startBot(){
+  const me = Math.random() < 0.5 ? 'X' : 'O';
+  G = {mode:'bot', me, board:'---------', turn:'X', st:'play', win:'', why:'', opp:{name:'Бот'}, rated:0, diff:gdiff, skew:0, dl:0, prev:'---------', delta:0};
+  show('board'); renderBoard();
+  if (G.turn !== G.me) botTurn();
+}
+function botTurn(){
+  const g = G;
+  setTimeout(() => {
+    if (G !== g || g.st !== 'play') return;
+    const bot = g.me === 'X' ? 'O' : 'X';
+    applyMove(g, botMove(g.board, bot, g.diff), bot); renderBoard();
+  }, 450);
+}
+function applyMove(g, i, sym){
+  g.board = g.board.slice(0, i) + sym + g.board.slice(i + 1);
+  const w = judgeB(g.board);
+  if (w) {
+    g.st = 'done'; g.win = w;
+    if (g.mode === 'bot') { const s = botStat(), k = w === 'D' ? 'd' : w === g.me ? 'w' : 'l'; s[k] = (s[k] || 0) + 1; try { localStorage.setItem('botstat', JSON.stringify(s)); } catch(e){} }
+  } else g.turn = sym === 'X' ? 'O' : 'X';
+}
+
+/* ---- онлайн ---- */
+function findMatch(){
+  gErr = ''; G = {mode:'search', t0:Date.now()}; show('board'); renderBoard();
+  const loop = async () => {
+    if (!G || G.mode !== 'search') return;
+    try { const r = await api('game.find'); if (r.game) { openPvp(r.game); return; } }
+    catch(e){ gErr = e.message; G = null; show('game'); if (/энерг/i.test(e.message)) openPacks(); return; }
+    if (G && G.mode === 'search') { renderBoard(); gSearch = setTimeout(loop, 1500); }
+  };
+  loop();
+}
+async function inviteFriend(){
+  try {
+    const r = await api('game.invite');
+    G = {mode:'pvp', id:r.id, st:'open', me:'X', board:'---------', turn:'X', rated:0, opp:null, link:r.link, prev:'---------', skew:0, dl:0, win:'', delta:0, rev:0};
+    show('board'); renderBoard(); startPoll();
+  } catch(e){ msg(e.message); }
+}
+async function joinInvite(id){
+  try { const r = await api('game.join', {id}); openPvp(r.game); }
+  catch(e){ msg(e.message); show('game'); }
+}
+function openPvp(game){
+  G = {mode:'pvp', ...game, prev:game.board, skew:game.now - Date.now(), rev:game.upd};
+  show('board'); renderBoard(); if (G.st !== 'done') startPoll();
+}
+function startPoll(){
+  clearTimeout(gPoll); clearInterval(gTick);
+  const id = G.id; gTick = setInterval(tick, 250);
+  const loop = async () => {
+    if (!G || G.id !== id || G.mode !== 'pvp' || G.st === 'done') return;
+    try { const r = await api('game.state', {id}); if (G && G.id === id) syncPvp(r.game); } catch(e){}
+    if (G && G.id === id && G.st !== 'done') gPoll = setTimeout(loop, 1200);
+  };
+  gPoll = setTimeout(loop, 1000);
+}
+function syncPvp(game){
+  const changed = game.upd !== G.rev || game.st !== G.st || game.turn !== G.turn;
+  const prev = G.prev; Object.assign(G, game, {skew:game.now - Date.now(), rev:game.upd}); G.prev = prev;
+  if (changed) { renderBoard(); if (G.st === 'done') { clearInterval(gTick); try { tg.HapticFeedback.notificationOccurred(G.win === G.me ? 'success' : G.win === 'D' ? 'warning' : 'error'); } catch(e){} } }
+}
+function tick(){
+  if (!G || G.mode !== 'pvp' || G.st !== 'play') return;
+  const left = Math.max(0, G.dl - (Date.now() + G.skew));
+  if ($('gBar')) $('gBar').style.width = Math.min(100, left / 300) + '%';
+  if ($('gSec')) $('gSec').textContent = Math.ceil(left / 1000) + ' с';
+}
+async function playCell(i){
+  const g = G;
+  if (!g || g.st !== 'play' || g.turn !== g.me || g.board[i] !== '-') return;
+  haptic();
+  if (g.mode === 'bot') { applyMove(g, i, g.me); renderBoard(); if (g.st === 'play') botTurn(); else try { tg.HapticFeedback.notificationOccurred(g.win === g.me ? 'success' : 'warning'); } catch(e){} return; }
+  g.board = g.board.slice(0, i) + g.me + g.board.slice(i + 1); g.turn = g.me === 'X' ? 'O' : 'X'; renderBoard();
+  try { const r = await api('game.move', {id:g.id, i}); if (G === g) syncPvp(r.game); }
+  catch(e){ try { const r = await api('game.state', {id:g.id}); if (G === g) syncPvp(r.game); } catch(x){} msg(e.message); }
+}
+function shareInvite(){
+  const link = G && G.link; if (!link) return;
+  const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent('Сыграем в крестики-нолики в CRYPTA?');
+  try { tg.openTelegramLink(url); } catch(e){ try { navigator.clipboard.writeText(link); msg('Ссылка скопирована'); } catch(x){} }
+}
+function leaveBoard(){
+  clearTimeout(gPoll); clearInterval(gTick); clearTimeout(gSearch);
+  const g = G; G = null;
+  if (g && g.mode === 'search') api('game.cancel').catch(() => {});
+  show('game'); loadGame();
+}
+function exitBoard(){
+  const g = G;
+  if (g && g.mode === 'pvp' && (g.st === 'play' || g.st === 'open')) {
+    const go = () => { api('game.resign', {id:g.id}).catch(() => {}); leaveBoard(); };
+    const q = g.st === 'play' ? 'Сдаться? Игра будет засчитана как поражение.' : 'Отменить приглашение?';
+    try { tg.showConfirm(q, ok => ok && go()); } catch(e){ if (confirm(q)) go(); }
+  } else leaveBoard();
+}
+
+/* ---- поле ---- */
+function renderBoard(){
+  const g = G; if (!g) return;
+  if (g.mode === 'search') {
+    const s = Math.floor((Date.now() - g.t0) / 1000);
+    $('bdTitle').textContent = 'Поиск соперника';
+    $('bdBody').innerHTML = `<div class="gspin"></div><div class="big" style="text-align:center">Ищем соперника…</div>
+      <p class="sub" style="text-align:center">${s} с${s >= 15 ? '. Сейчас мало игроков онлайн: позовите друга или сыграйте с ботом.' : ''}</p>
+      ${s >= 15 ? '<button class="ghost" id="sBot">Сыграть с ботом</button>' : ''}<button class="ghost" id="sCancel">Отменить</button>`;
+    if ($('sBot')) $('sBot').onclick = () => { leaveBoard(); startBot(); };
+    if ($('sCancel')) $('sCancel').onclick = () => leaveBoard();
+    return;
+  }
+  const me = g.me, done = g.st === 'done', line = done ? winLine(g.board) : null, myTurn = g.st === 'play' && g.turn === me;
+  const sym = c => c === 'X' ? '✕' : '○';
+  const pl = (c, name, sub) => `<div class="p ${g.st === 'play' && g.turn === c ? 'on' : ''}"><b>${esc(name)}</b><small>${sym(c)} ${sub}</small></div>`;
+  const opp = g.opp ? g.opp.name : 'Ждём соперника…', oc = me === 'X' ? 'O' : 'X';
+  $('bdTitle').textContent = g.mode === 'bot' ? 'Против бота' : g.rated ? 'Рейтинговая игра' : 'Дружеская игра';
+  let status = '';
+  if (g.st === 'open') status = `<div class="res"><div class="big">Ждём друга</div><p class="sub">Отправьте ссылку: как только друг откроет её, игра начнётся.</p><button class="cta" id="gShare" style="margin-top:6px">Отправить ссылку ↗</button></div>`;
+  else if (done) {
+    const r = g.win === 'D' ? 'Ничья' : g.win === me ? 'Победа!' : 'Поражение';
+    const why = g.why === 'timeout' ? (g.win === me ? 'Время соперника вышло' : 'Время вышло') : g.why === 'resign' ? (g.win === me ? 'Соперник сдался' : 'Вы сдались') : '';
+    const d = g.rated ? `${g.delta > 0 ? '+' : ''}${g.delta} к рейтингу` : '';
+    status = `<div class="res"><div class="big">${r}</div><p class="sub">${[why, d].filter(Boolean).join(' · ')}</p>
+      <button class="cta" id="gAgain" style="margin-top:6px">Сыграть ещё</button><button class="ghost" id="gLobby">В лобби</button></div>`;
+  } else status = `<div class="stat-line">${myTurn ? 'Ваш ход' : g.mode === 'bot' ? 'Бот думает…' : 'Ход соперника…'}</div>`;
+  $('bdBody').innerHTML = `
+    <div class="pl">${pl(me, 'Вы', g.mode === 'bot' ? '' : (g.rated ? 'рейтинг' : 'друг'))}${pl(oc, opp, g.opp && g.opp.rating ? g.opp.rating : '')}</div>
+    ${g.mode === 'pvp' && g.st === 'play' ? '<div class="tbar"><i id="gBar"></i></div><div class="note2" id="gSec" style="text-align:center;margin:0"></div>' : ''}
+    <div class="board">${[...g.board].map((c, i) => `<button class="cell ${line && line.includes(i) ? 'win' : ''}" data-i="${i}" ${(c !== '-' || !myTurn) ? 'disabled' : ''} aria-label="клетка ${i + 1}">${c === '-' ? '' : mk(c, g.prev[i] === c)}</button>`).join('')}</div>
+    ${status}`;
+  g.prev = g.board;
+  document.querySelectorAll('#bdBody .cell').forEach(b => b.onclick = () => playCell(+b.dataset.i));
+  if ($('gShare')) $('gShare').onclick = shareInvite;
+  if ($('gLobby')) $('gLobby').onclick = leaveBoard;
+  if ($('gAgain')) $('gAgain').onclick = () => { const m = g.mode, r = g.rated; G = null; clearTimeout(gPoll); clearInterval(gTick); if (m === 'bot') startBot(); else if (r) findMatch(); else { show('game'); loadGame(); } };
+  tick();
+}
+$('bdBack').onclick = () => { haptic(); exitBoard(); };
+
 function openWallet(){
   haptic();
   const rows = holdings();
